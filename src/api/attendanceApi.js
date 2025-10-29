@@ -1,0 +1,13 @@
+import axios from "../utils/axiosInterceptor";
+
+const LOCAL_API = "http://localhost:3000/api";
+
+export const AttendanceAPI = {
+    async getAttendanceByEmployee(empCode, month, year) {
+        const response = await fetch(`${LOCAL_API}/attendance/record/${empCode}/${month}/${year}`, );
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    },
+};
