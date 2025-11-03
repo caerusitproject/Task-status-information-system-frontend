@@ -24,25 +24,26 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // For password visibility toggle
 
-  const { login, isAuthenticated, loading, error } = useAuth();
+  const { login, isAuthenticated,user, loading, error } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm")); // Better than manual resize listener
   const isTablet = useMediaQuery(muiTheme.breakpoints.between("sm", "md"));
-
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/home", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  if (isAuthenticated && user) {
+    const isAdmin = user?.roles?.includes("ADMIN") || user?.role === "ADMIN";
+    navigate(isAdmin ? "/admin-config" : "/task-management", { replace: true });
+  }
+}, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await login(email, password);
-    if (success) {
-      navigate("/home", { replace: true });
-    }
+    // console.log(useAuth);
+    // if (success) {
+    //   navigate("/home", { replace: true });
+    // }
   };
 
   const handleKeyPress = (e) => {

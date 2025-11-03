@@ -1,4 +1,3 @@
-import { useTokenRefresh } from '../src/hooks/useTokenRefresh';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import ReduxProvider from './components/ReduxProvider';

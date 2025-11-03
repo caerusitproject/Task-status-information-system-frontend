@@ -1,55 +1,95 @@
-import { useState } from "react";
+// src/pages/tasks/TaskList.jsx  (filename was Task.jsx before)
+
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { theme } from "../../theme/theme"; // Reuse existing theme
-import Button from "../../components/common/Button"; // Reuse custom Button
-import Input from "../../components/common/Input"; // Reuse custom Input
+import { theme } from "../../theme/theme";
+import Button from "../../components/common/Button";
 import TaskCard from "./TaskCard";
 import TaskStatusInformationForm from "./TaskStatusInformationForm";
-
-// Mock initial data
-const initialTasks = [
-  {
-    id: 1,
-    taskTitle: "Fix Login Authentication Bug",
-    user: "John Doe",
-    taskType: "Issue",
-    ticketId: "TICK-001",
-    ticketingSystem: "JIRA",
-    application: "Web Portal",
-    module: "Authentication",
-    executionNote: "Fixed session timeout issue and improved error handling",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    taskTitle: "Database Performance Optimization",
-    user: "Jane Smith",
-    taskType: "Assign",
-    ticketId: "TICK-002",
-    ticketingSystem: "ServiceNow",
-    application: "Backend API",
-    module: "Database",
-    executionNote: "Added indexes to improve query performance by 40%",
-    status: "In-Progress",
-  },
-  {
-    id: 3,
-    taskTitle: "Implement User Dashboard",
-    user: "Mike Johnson",
-    taskType: "Assign",
-    ticketId: "TICK-003",
-    ticketingSystem: "JIRA",
-    application: "Web Portal",
-    module: "Dashboard",
-    executionNote: "Pending review from product team",
-    status: "Not Started",
-  },
-];
-
+import { TaskApi } from "../../api/taskApi";
+import { TicketingSystemApi } from "../../api/ticketingSystemApi";
+import { ApplicationApi } from "../../api/applicationApi";
+import { useAuth } from "../../hooks/useAuth";  
 const TaskList = () => {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    nextPage: null,
+    previousPage: null,
+  });
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [dropdowns, setDropdowns] = useState({
+    applications: [],
+    ticketingSystems: [],
+  });
+  const [appMap, setAppMap] = useState({});
+  const [tickMap, setTickMap] = useState({});
+
+  // Fetch dropdown data (no pagination)
+  const fetchDropdowns = async () => {
+    try {
+      const [appsRes, tickRes] = await Promise.all([
+        ApplicationApi.view(),
+        TicketingSystemApi.view(),
+      ]);
+      const apps = appsRes.rows.map(a => ({ value: a.id, label: a.name }));
+      const ticks = tickRes.rows.map(t => ({ value: t.id, label: t.ticketing_system_name }));
+      setDropdowns({ applications: apps, ticketingSystems: ticks });
+
+      // Build maps for labels
+      const aMap = Object.fromEntries(appsRes.rows.map(a => [a.id, a.name]));
+      const tMap = Object.fromEntries(tickRes.rows.map(t => [t.id, t.ticketing_system_name]));
+      setAppMap(aMap);
+      setTickMap(tMap);
+    } catch (err) {
+      console.error("Failed to load dropdowns:", err);
+    }
+  };
+
+  // Fetch tasks with pagination + enrich with labels
+  const fetchTasks = async (page = 1) => {
+    setLoading(true);
+    try {
+      const res = await TaskApi.view(page, 5);
+      setTasks(res.rows.map(t => ({
+        id: t.id,
+        taskTitle: t.task_title,
+        ticketId: t.ticket_id,
+        taskType: t.task_type,
+        application: t.application_id,
+        applicationLabel: appMap[t.application_id] || `App ${t.application_id}`,
+        ticketingSystem: t.ticketing_system_id,
+        ticketingSystemLabel: tickMap[t.ticketing_system_id] || `Sys ${t.ticketing_system_id}`,
+        module: t.module,
+        executionNote: t.execution_note,
+        status: t.status,
+      })));
+      setPagination({
+        currentPage: res.currentPage,
+        totalPages: res.totalPages,
+        nextPage: res.nextPage,
+        previousPage: res.previousPage,
+      });
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDropdowns();
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(appMap).length && Object.keys(tickMap).length) {
+      fetchTasks();
+    }
+  }, [appMap, tickMap]);
 
   const handleCreateNew = () => {
     setEditingTask(null);
@@ -61,179 +101,112 @@ const TaskList = () => {
     setShowForm(true);
   };
 
-  const handleSave = (formData) => {
-    if (editingTask) {
-      // Update existing task - only execution note and status can be changed
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === editingTask.id
-            ? {
-                ...t,
-                executionNote: formData.executionNote,
-                status: formData.status,
-              }
-            : t
-        )
-      );
-    } else {
-      // Create new task
-      setTasks((prev) => [
-        ...prev,
-        {
-          ...formData,
-          id: Date.now(),
-        },
-      ]);
-    }
-    setShowForm(false);
-    setEditingTask(null);
+  const statusMap = {
+    "New": "NEW",
+    "In-Progress": "IN_PROGRESS",
+    "Completed": "COMPLETED",
+    "Blocked": "BLOCKED",
   };
 
-  const handleClose = () => {
-    setShowForm(false);
-    setEditingTask(null);
+  const handleSave = async (formData) => {
+    const payload = {
+      task_title: formData.taskTitle,
+      task_type: formData.taskType,
+      module: formData.module,
+      application_id: Number(formData.application),
+      ticketing_system_id: Number(formData.ticketingSystem),
+      ticket_id: formData.ticketId,
+      status: statusMap[formData.status] || formData.status,
+      execution_note: formData.executionNote,
+      created_by: user?.id,
+    };
+
+    try {
+      if (editingTask) {
+        await TaskApi.edit(editingTask.id, {
+          execution_note: formData.executionNote,
+          status: statusMap[formData.status] || formData.status,
+          task_type: formData.taskType,
+        });
+      } else {
+        await TaskApi.create(payload);
+      }
+      fetchTasks(pagination.currentPage);
+      setShowForm(false);
+      setEditingTask(null);
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+  };
+
+  const handlePageChange = (direction) => {
+    const next = direction === "next" ? pagination.nextPage : pagination.previousPage;
+    if (next) fetchTasks(next);
   };
 
   return (
     <div>
-      <div>
-        {/* Header Section */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: theme.spacing.xl,
-            flexWrap: "wrap",
-            gap: theme.spacing.md,
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                color: theme.colors.text.primary,
-                fontSize: "2rem",
-                fontWeight: "700",
-              }}
-            >
-              Task Management
-            </h1>
-            <p
-              style={{
-                margin: "8px 0 0 0",
-                color: theme.colors.text.secondary,
-                fontSize: "0.95rem",
-              }}
-            >
-              Manage and track your tasks efficiently
-            </p>
-          </div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: theme.spacing.sm, flexWrap: "wrap", gap: theme.spacing.md }}>
+        <div>
+          <h1 style={{ margin: 0, color: theme.colors.text.primary, fontSize: "2rem", fontWeight: "700" }}>
+            Task Management
+          </h1>
+          <p style={{ margin: "8px 0 0 0", color: theme.colors.text.secondary, fontSize: "0.95rem" }}>
+            Manage and track your tasks efficiently
+          </p>
+        </div>
+        <Button type="primary" onClick={handleCreateNew} size="medium" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "16px" }}>
+          + Create New Task
+        </Button>
+      </div>
 
-          {/* Create New Task Button */}
-          <div
-            style={{
-              flexShrink: 0,
-              marginLeft: "auto",
-              display: "flex",
-              justifyContent: "flex-end",
-              width: "100%",
-              maxWidth: "200px",
-            }}
-          >
-            <Button
-              type="primary"
-              onClick={handleCreateNew}
-              size="medium"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                fontSize: "16px",
-                width: "100%",
-              }}
-            >
-              + Create New Task
+      {/* Task List */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "40px" }}>Loading...</div>
+      ) : tasks.length === 0 ? (
+        <div style={{ backgroundColor: theme.colors.white, borderRadius: theme.borderRadius.medium, padding: "60px 40px", textAlign: "center", border: `1px solid ${theme.colors.lightGray}` }}>
+          <p style={{ margin: 0, fontSize: "1rem" }}>No tasks yet. Click "Create New Task" to get started.</p>
+        </div>
+      ) : (
+        <>
+          <p style={{ color: theme.colors.text.secondary, fontSize: "0.9rem", marginBottom: theme.spacing.md }}>
+            {tasks.length} task{tasks.length !== 1 ? "s" : ""} total
+          </p>
+          {tasks.map((task) => (
+            <TaskCard key={task.id} task={task} onEdit={handleEdit} />
+          ))}
+
+          {/* Pagination */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
+            <Button disabled={!pagination.previousPage} onClick={() => handlePageChange("prev")}>
+              {"< Prev"}
+            </Button>
+            <span style={{ fontSize: "0.95rem", color: theme.colors.text.secondary }}>
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </span>
+            <Button disabled={!pagination.nextPage} onClick={() => handlePageChange("next")}>
+              {"Next >"}
             </Button>
           </div>
-        </div>
+        </>
+      )}
 
-        {/* Task List Section */}
-        <div>
-          {tasks.length === 0 ? (
-            <div
-              style={{
-                backgroundColor: theme.colors.white,
-                borderRadius: theme.borderRadius.medium,
-                padding: "60px 40px",
-                textAlign: "center",
-                color: theme.colors.text.secondary,
-                border: `1px solid ${theme.colors.lightGray}`,
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "1rem" }}>
-                No tasks yet. Click "Create New Task" to get started.
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p
-                style={{
-                  color: theme.colors.text.secondary,
-                  fontSize: "0.9rem",
-                  marginBottom: theme.spacing.md,
-                }}
-              >
-                {tasks.length} task{tasks.length !== 1 ? "s" : ""} total
-              </p>
-              {tasks.map((task) => (
-                <TaskCard key={task.id} task={task} onEdit={handleEdit} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Modal Overlay for Form */}
-        {showForm && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-              padding: theme.spacing.md,
-            }}
-            onClick={handleClose}
-          >
-            <div
-              style={{
-                backgroundColor: theme.colors.white,
-                borderRadius: theme.borderRadius.medium,
-                maxWidth: "600px",
-                width: "100%",
-                maxHeight: "90vh",
-                overflowY: "auto",
-                boxShadow: "0 20px 25px rgba(0,0,0,0.15)",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <TaskStatusInformationForm
-                initialData={editingTask}
-                isEditMode={!!editingTask}
-                onSubmit={handleSave}
-                onCancel={handleClose}
-              />
-            </div>
+      {/* Form Modal */}
+      {showForm && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: theme.spacing.md }} onClick={() => setShowForm(false)}>
+          <div style={{ backgroundColor: theme.colors.white, borderRadius: theme.borderRadius.medium, maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
+            <TaskStatusInformationForm
+              initialData={editingTask}
+              isEditMode={!!editingTask}
+              onSubmit={handleSave}
+              onCancel={() => { setShowForm(false); setEditingTask(null); }}
+              applications={dropdowns.applications}
+              ticketingSystems={dropdowns.ticketingSystems}
+            />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

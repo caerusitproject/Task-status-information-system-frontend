@@ -1,9 +1,6 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
-import { AuthApi } from '../api/authApi'; // Use AuthApi as per previous fix
-import { EmployeeAPI } from '../api/employeeApi';
-import { storeAuthData } from '../pages/auth/authStorage';
-import { setCookie } from '../utils/cookiesUtil';
+
 
 export const AuthContext = createContext();
 
@@ -20,60 +17,40 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const login = async (email, password) => {
-    try {
-      setLoading(true);
-      setError(null);
+ const login = async (email, password) => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      const authResponse = await EmployeeAPI.login({ email, password });
+    // === REMOVE ALL API CALLS ===
+    // Simulate login with any credentials
+    const dummyUser = {
+      id: 999,
+      email: email,
+      name: email,
+      role: "ADMIN", // or "HR", "MANAGER", "USER"
+      roles: ["ADMIN"],
+      empCode: "EMP9999",
+      departmentId: 1,
+      designation: "Software Engineer",
+      mobile: "+919876543210",
+      phone: "+919876543210",
+      loginTime: new Date().toISOString(),
+    };
 
-      if (typeof storeAuthData === "function") {
-        storeAuthData(authResponse);
-      }
+    setIsAuthenticated(true);
+    setUser(dummyUser);
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('user', JSON.stringify(dummyUser));
 
-      const { userData } = authResponse;
-      const userDataFormatted = {
-        id: userData.id,
-        email: userData.email,
-        role: userData.authorities?.[0] || "USER",
-        roles: userData.authorities || [],
-        loginTime: new Date().toISOString(),
-      };
-
-      setIsAuthenticated(true);
-      setUser(userDataFormatted);
-
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userDataFormatted));
-
-      (async () => {
-        try {
-          const employeeData = await EmployeeAPI.fetchEmployeeData(userData.id);
-          const updatedUser = {
-            ...userDataFormatted,
-            name: employeeData?.name,
-            empCode: employeeData?.empCode,
-            departmentId: employeeData?.departmentId,
-            designation: employeeData?.designation,
-            mobile: employeeData?.mobile,
-            phone: employeeData?.phone,
-          };
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-        } catch (err) {
-          console.warn("Could not fetch employee details after login:", err.message);
-        }
-      })();
-
-      setLoading(false);
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.response?.data?.message || error.message || 'Login failed (Invalid email or password) ');
-      setLoading(false);
-      return false;
-    }
-  };
+    setLoading(false);
+    return true;
+  } catch (error) {
+    setError('Login failed');
+    setLoading(false);
+    return false;
+  }
+};
 
   const logout = () => {
     setIsAuthenticated(false);

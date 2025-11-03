@@ -1,12 +1,20 @@
+// src/pages/tasks/TaskStatusInformationForm.jsx
 
-import { useState, useEffect } from "react"
-import { theme } from '../../theme/theme'; // Reuse existing theme
-import Button from '../../components/common/Button'; // Reuse custom Button
-import Input from '../../components/common/Input'; // Reuse custom Input
+import { useState, useEffect, useRef } from "react";
+import { theme } from "../../theme/theme";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
 
-// Reusable Radio Group Component
-export const RadioGroup = ({ label, value, onChange, options, disabled = false }) => (
-  <div style={{ marginBottom: theme.spacing.md }}>
+export const RadioGroup = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  error,
+  required,
+}) => (
+  <div style={{ marginBottom: theme.spacing.md, width: "100%" }}>
     <label
       style={{
         display: "block",
@@ -16,95 +24,207 @@ export const RadioGroup = ({ label, value, onChange, options, disabled = false }
         marginBottom: theme.spacing.xs,
       }}
     >
-      {label}
+      {label} {required && <span style={{ color: theme.colors.error }}>*</span>}
     </label>
-    <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "16px",
+        flexWrap: "wrap",
+        padding: "8px 0",
+      }}
+    >
       {options.map((opt) => (
         <label
           key={opt.value}
-          style={{ display: "flex", alignItems: "center", gap: "8px", cursor: disabled ? "not-allowed" : "pointer" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: disabled ? "not-allowed" : "pointer",
+            padding: "8px 12px",
+            // border: `2px solid ${
+            //   value === opt.value ? theme.colors.primary : theme.colors.border
+            // }`,
+            borderRadius: theme.borderRadius.small,
+            backgroundColor:
+              value === opt.value ? "rgba(61, 52, 230, 0.05)" : "transparent",
+            transition: "all 0.2s",
+            minWidth: "120px",
+          }}
         >
           <input
             type="radio"
             value={opt.value}
             checked={value === opt.value}
-            onChange={(e) => !disabled && onChange(opt.value)}
+            onChange={() => !disabled && onChange(opt.value)}
             disabled={disabled}
-            style={{ width: "20px", height: "20px" }}
+            style={{
+              width: "18px",
+              height: "18px",
+              cursor: disabled ? "not-allowed" : "pointer",
+              accentColor: theme.colors.primary,
+            }}
           />
-          {opt.label}
+          <span style={{ fontSize: "14px", fontWeight: "500" }}>
+            {opt.label}
+          </span>
         </label>
       ))}
     </div>
+    {error && (
+      <p
+        style={{
+          color: theme.colors.error,
+          fontSize: "12px",
+          marginTop: theme.spacing.xs,
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 11a1 1 0 110-2 1 1 0 010 2zm1-3H7V5h2v4z" />
+        </svg>
+        {error}
+      </p>
+    )}
   </div>
-)
+);
 
-const TaskStatusInformationForm = ({ initialData, isEditMode, onSubmit, onCancel }) => {
+const TaskStatusInformationForm = ({
+  initialData,
+  isEditMode,
+  onSubmit,
+  onCancel,
+  applications = [],
+  ticketingSystems = [],
+}) => {
   const [formData, setFormData] = useState({
     taskTitle: "",
-    user: "",
     taskType: "Assign",
     ticketId: "",
     ticketingSystem: "",
     application: "",
     module: "",
     executionNote: "",
-    status: "In-Progress",
-  })
+    status: "NEW",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const fieldRefs = useRef({
+    taskTitle: useRef(null),
+    taskType: useRef(null),
+    ticketId: useRef(null),
+    ticketingSystem: useRef(null),
+    application: useRef(null),
+    module: useRef(null),
+    executionNote: useRef(null),
+    status: useRef(null),
+  }).current;
 
   useEffect(() => {
     if (initialData) {
       setFormData({
         taskTitle: initialData.taskTitle || "",
-        user: initialData.user || "",
         taskType: initialData.taskType || "Assign",
         ticketId: initialData.ticketId || "",
         ticketingSystem: initialData.ticketingSystem || "",
         application: initialData.application || "",
         module: initialData.module || "",
         executionNote: initialData.executionNote || "",
-        status: initialData.status || "In-Progress",
-      })
-    } else {
-      setFormData({
-        taskTitle: "",
-        user: "",
-        taskType: "Assign",
-        ticketId: "",
-        ticketingSystem: "",
-        application: "",
-        module: "",
-        executionNote: "",
-        status: "In-Progress",
-      })
+        status: initialData.status || "NEW",
+      });
+      setErrors({});
     }
-  }, [initialData])
+  }, [initialData]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const validateField = (field, value) => {
+    const trimmedValue = typeof value === "string" ? value.trim() : value;
+
+    if (!trimmedValue || trimmedValue === "") {
+      const fieldLabels = {
+        taskTitle: "Task title is required",
+        taskType: "Please select a task type",
+        ticketId: "Ticket ID is required",
+        ticketingSystem: "Please select a ticketing system",
+        application: "Please select an application",
+        module: "Module name is required",
+        executionNote: "Execution note is required",
+        status: "Please select a status",
+      };
+      return fieldLabels[field] || "This field is required";
+    }
+
+    if (field === "executionNote" && trimmedValue.length < 3) {
+      return "Execution note must be at least 3 characters";
+    }
+
+    return undefined;
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (onSubmit) {
-      onSubmit(formData)
+    e.preventDefault();
+
+    const newErrors = {};
+    const fields = Object.keys(formData);
+    fields.forEach((field) => {
+      const err = validateField(field, formData[field]);
+      if (err) newErrors[field] = err;
+    });
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorField = Object.keys(newErrors)[0];
+      const ref = fieldRefs[firstErrorField];
+      if (ref && ref.current) {
+        ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        const inputEl = ref.current.querySelector("input, select, textarea");
+        if (inputEl) {
+          setTimeout(() => inputEl.focus(), 300);
+        }
+      }
+      return;
     }
-  }
+
+    if (onSubmit) onSubmit(formData);
+  };
 
   const isFieldDisabled = (field) => {
-    if (!isEditMode) return false
-    return !["executionNote", "status"].includes(field)
-  }
+    if (!isEditMode) return false;
+    return !["executionNote", "status", "taskType"].includes(field);
+  };
+
+  const wrapWithRef = (field, element) => (
+    <div ref={fieldRefs[field]} style={{ scrollMarginTop: "80px" }}>
+      {element}
+    </div>
+  );
 
   return (
     <div
       style={{
         backgroundColor: theme.colors.white,
-        borderRadius: theme.borderRadius.medium,
+        //borderRadius: theme.borderRadius.medium,
         padding: theme.spacing.lg,
         boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        maxWidth: "600px",
+        maxWidth: "700px",
         margin: "0 auto",
+        scrollbarGutter: "none",
+        scrollbarWidth: "thin", // for Firefox
+        msOverflowStyle: "none", // hides default scrollbar space in IE/Edge
+        overscrollBehavior: "contain",
+        position: "relative",
+        overflowY: "auto",
       }}
     >
       <div
@@ -112,8 +232,8 @@ const TaskStatusInformationForm = ({ initialData, isEditMode, onSubmit, onCancel
           background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%)`,
           color: theme.colors.white,
           padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-          borderTopLeftRadius: theme.borderRadius.small,
-          borderTopRightRadius: theme.borderRadius.small,
+          //borderTopLeftRadius: theme.borderRadius.small,
+          // borderTopRightRadius: theme.borderRadius.medium,
           margin: `-${theme.spacing.lg} -${theme.spacing.lg} ${theme.spacing.md} -${theme.spacing.lg}`,
           textAlign: "center",
         }}
@@ -123,120 +243,174 @@ const TaskStatusInformationForm = ({ initialData, isEditMode, onSubmit, onCancel
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <Input
-          label="Task Title"
-          type="text"
-          value={formData.taskTitle}
-          onChange={(e) => handleChange("taskTitle", e.target.value)}
-          placeholder="Enter task title"
-          disabled={isFieldDisabled("taskTitle")}
-        />
+      <form onSubmit={handleSubmit} style={{ scrollBehavior: "smooth" }}>
+        {wrapWithRef(
+          "taskTitle",
+          <Input
+            label="Task Title"
+            name="taskTitle"
+            type="text"
+            value={formData.taskTitle}
+            onChange={(e) => handleChange("taskTitle", e.target.value)}
+            placeholder="Enter task title"
+            required
+            errors={{ taskTitle: errors.taskTitle }}
+            disabled={isFieldDisabled("taskTitle")}
+          />
+        )}
 
-        <Input
-          label="User"
-          type="text"
-          value={formData.user}
-          onChange={(e) => handleChange("user", e.target.value)}
-          placeholder="Enter user name"
-          disabled={isFieldDisabled("user")}
-        />
-
-        <RadioGroup
-          label="Task Type"
-          value={formData.taskType}
-          onChange={(value) => handleChange("taskType", value)}
-          options={[
-            { value: "Assign", label: "Assign" },
-            { value: "Issue", label: "Issue" },
-          ]}
-          disabled={isFieldDisabled("taskType")}
-        />
-
-        <Input
-          label="Ticket ID"
-          type="text"
-          value={formData.ticketId}
-          onChange={(e) => handleChange("ticketId", e.target.value)}
-          placeholder="Enter ticket ID"
-          disabled={isFieldDisabled("ticketId")}
-        />
-
-        <Input
-          label="Ticketing System"
-          type="select"
-          value={formData.ticketingSystem}
-          onChange={(e) => handleChange("ticketingSystem", e.target.value)}
-          options={[
-            { value: "", label: "Select System" },
-            { value: "JIRA", label: "JIRA" },
-            { value: "ServiceNow", label: "ServiceNow" },
-            { value: "Zendesk", label: "Zendesk" },
-            { value: "Freshdesk", label: "Freshdesk" },
-          ]}
-          disabled={isFieldDisabled("ticketingSystem")}
-        />
-
-        <Input
-          label="Application"
-          type="select"
-          value={formData.application}
-          onChange={(e) => handleChange("application", e.target.value)}
-          options={[
-            { value: "", label: "Select Application" },
-            { value: "Web Portal", label: "Web Portal" },
-            { value: "Backend API", label: "Backend API" },
-            { value: "Mobile App", label: "Mobile App" },
-          ]}
-          disabled={isFieldDisabled("application")}
-        />
-
-        <Input
-          label="Module"
-          type="text"
-          value={formData.module}
-          onChange={(e) => handleChange("module", e.target.value)}
-          placeholder="Enter module"
-          disabled={isFieldDisabled("module")}
-        />
-
-        <Input
-          label="Execution Note"
-          type="textarea"
-          value={formData.executionNote}
-          onChange={(e) => handleChange("executionNote", e.target.value)}
-          placeholder="Enter execution notes"
-          disabled={isFieldDisabled("executionNote")}
-        />
-
-        <Input
-          label="Status"
-          type="select"
-          value={formData.status}
-          onChange={(e) => handleChange("status", e.target.value)}
-          options={[
-            { value: "In-Progress", label: "In-Progress" },
-            { value: "Not Started", label: "Not Started" },
-            { value: "Completed", label: "Completed" },
-            { value: "On Hold", label: "On Hold" },
-          ]}
-          disabled={isFieldDisabled("status")}
-        />
+        {wrapWithRef(
+          "taskType",
+          <RadioGroup
+            label="Task Type"
+            value={formData.taskType}
+            onChange={(value) => handleChange("taskType", value)}
+            options={[
+              { value: "Assign", label: "Assign" },
+              { value: "Issue", label: "Issue" },
+            ]}
+            required
+            disabled={isFieldDisabled("taskType")}
+            error={errors.taskType}
+          />
+        )}
 
         <div
-          style={{ display: "flex", gap: theme.spacing.sm, justifyContent: "flex-end", marginTop: theme.spacing.md }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: theme.spacing.md,
+          }}
         >
-            <Button type="secondary" onClick={onCancel}>
+          {wrapWithRef(
+            "ticketId",
+            <Input
+              label="Ticket ID"
+              name="ticketId"
+              type="text"
+              value={formData.ticketId}
+              onChange={(e) => handleChange("ticketId", e.target.value)}
+              placeholder="Enter ticket ID"
+              required
+              errors={{ ticketId: errors.ticketId }}
+              disabled={isFieldDisabled("ticketId")}
+            />
+          )}
+
+          {wrapWithRef(
+            "ticketingSystem",
+            <Input
+              label="Ticketing System"
+              name="ticketingSystem"
+              type="select"
+              value={formData.ticketingSystem}
+              onChange={(e) => handleChange("ticketingSystem", e.target.value)}
+              options={[
+                { value: "", label: "Select System" },
+                ...ticketingSystems,
+              ]}
+              required
+              errors={{ ticketingSystem: errors.ticketingSystem }}
+              disabled={isFieldDisabled("ticketingSystem")}
+            />
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: theme.spacing.md,
+          }}
+        >
+          {wrapWithRef(
+            "application",
+            <Input
+              label="Application"
+              name="application"
+              type="select"
+              value={formData.application}
+              onChange={(e) => handleChange("application", e.target.value)}
+              options={[
+                { value: "", label: "Select Application" },
+                ...applications,
+              ]}
+              required
+              errors={{ application: errors.application }}
+              disabled={isFieldDisabled("application")}
+            />
+          )}
+
+          {wrapWithRef(
+            "module",
+            <Input
+              label="Module"
+              name="module"
+              type="text"
+              value={formData.module}
+              onChange={(e) => handleChange("module", e.target.value)}
+              placeholder="Enter module"
+              required
+              errors={{ module: errors.module }}
+              disabled={isFieldDisabled("module")}
+            />
+          )}
+        </div>
+
+        {wrapWithRef(
+          "executionNote",
+          <Input
+            label="Execution Note"
+            name="executionNote"
+            type="textarea"
+            value={formData.executionNote}
+            onChange={(e) => handleChange("executionNote", e.target.value)}
+            placeholder="Enter execution notes"
+            required
+            errors={{ executionNote: errors.executionNote }}
+            disabled={isFieldDisabled("executionNote")}
+          />
+        )}
+
+        {wrapWithRef(
+          "status",
+          <Input
+            label="Status"
+            name="status"
+            type="select"
+            value={formData.status}
+            onChange={(e) => handleChange("status", e.target.value)}
+            options={[
+              { value: "NEW", label: "New" },
+              { value: "IN_PROGRESS", label: "In-Progress" },
+              { value: "COMPLETED", label: "Completed" },
+              { value: "BLOCKED", label: "Blocked" },
+            ]}
+            required
+            errors={{ status: errors.status }}
+            disabled={isFieldDisabled("status")}
+          />
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            gap: theme.spacing.sm,
+            justifyContent: "flex-end",
+            marginTop: theme.spacing.md,
+            flexWrap: "wrap",
+          }}
+        >
+          <Button type="secondary" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="primary" onClick={handleSubmit}>
             {isEditMode ? "Update" : "Create"}
           </Button>
-          
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default TaskStatusInformationForm
+export default TaskStatusInformationForm;

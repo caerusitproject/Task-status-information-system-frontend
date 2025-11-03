@@ -47,7 +47,7 @@ const MainLayout = () => {
             position: "fixed",
             top: theme.spacing.md,
             left: theme.spacing.sm,
-            zIndex: 1001,
+            zIndex: isMobile? 10 : 10001,
             background: theme.colors.white,
             border: `1px solid ${theme.colors.lightGray}`,
             borderTopRightRadius: "8px",
