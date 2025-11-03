@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import SideNav from "./SideNav";
 import { theme } from "../../theme/theme";
 import { STORAGE_KEYS } from "../../utils/constants";
-import Footer from "../common/Footer";
 
 const MainLayout = () => {
   const [sidenavCollapsed, setSidenavCollapsed] = useState(() => {

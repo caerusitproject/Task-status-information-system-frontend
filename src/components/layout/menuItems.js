@@ -1,14 +1,20 @@
 // menuItems.js
 import React from "react";
-import ReportIcon from '@mui/icons-material/Report';
+import ReportIcon from "@mui/icons-material/Report";
 import ConfigIcon from "@mui/icons-material/Settings"; // Admin Config
-import DescriptionIcon from '@mui/icons-material/Description';
+import DescriptionIcon from "@mui/icons-material/Description";
 import TaskIcon from "@mui/icons-material/Task";
 const user = JSON.parse(localStorage.getItem("user"));
 const userId = user?.id || 1; // fallback to 1 if not found
 export const menuItems = [
-  
-   {
+  {
+    path: "/report",
+    label: "Report",
+    icon: DescriptionIcon,
+    key: "report",
+    requiredRoles: ["ADMIN"],
+  },
+  {
     path: "/task-management",
     label: "Task Management",
     icon: TaskIcon,
@@ -20,14 +26,6 @@ export const menuItems = [
     label: "Admin Config",
     icon: ConfigIcon,
     key: "admin-config",
-   requiredRoles: [ "ADMIN"],
+    requiredRoles: ["ADMIN"],
   },
-  {
-    path: "/report",
-    label: "Report",
-    icon: DescriptionIcon ,
-    key: "report",
-   requiredRoles: ["ADMIN"],
-  },
-  
 ];
