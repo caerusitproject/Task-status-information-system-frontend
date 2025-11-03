@@ -5,7 +5,6 @@ import { loginStart, loginSuccess } from "../../store/slices/authSlice";
 import { useAuth } from "../../hooks/useAuth";
 import { storeAuthData } from "./authStorage";
 import { theme } from "../../theme/theme";
-import CompanyLogo from "../../assets/caerus-logo.png";
 import {
   Box,
   Typography,
@@ -32,7 +31,7 @@ const Login = () => {
   useEffect(() => {
   if (isAuthenticated && user) {
     const isAdmin = user?.roles?.includes("ADMIN") || user?.role === "ADMIN";
-    navigate(isAdmin ? "/admin-config" : "/task-management", { replace: true });
+    navigate(isAdmin ? "/report" : "/task-management", { replace: true });
   }
 }, [isAuthenticated, user, navigate]);
 
@@ -91,19 +90,31 @@ const Login = () => {
               mb: isMobile ? 2 : 3,
             }}
           >
-            
+            {/* <Box
+              component="img"
+              src={CompanyLogo}
+              alt="Caerus Company Logo"
+              sx={{
+                height: { xs: "40px", sm: "48px" },
+                width: { xs: "140px", sm: "200px" },
+                maxWidth: "100%",
+                objectFit: "contain",
+                mb: 1.5,
+                mx: "auto",
+              }}
+            /> */}
             <Typography
-              variant={isMobile ? "h5" : "h4"}
               sx={{
                 color: theme.colors.primary,
-                mb: 0.5,
+                mb: 3,
                 fontWeight: 700,
+                fontSize : isMobile? "20px" : "24px",
                 letterSpacing: "0.5px",
               }}
             >
-              {/* {COMPANY_INFO.name} */}
+             Task Status Information System
             </Typography>
-            <Typography
+            {/* <Typography
               variant="body2"
               sx={{
                 color: theme.colors.text.secondary,
@@ -112,8 +123,8 @@ const Login = () => {
                 letterSpacing: "0.3px",
               }}
             >
-              {/* {COMPANY_INFO.description} */}
-            </Typography>
+              {COMPANY_INFO.description}
+            </Typography> */}
           </Box>
 
           {/* Login Form */}

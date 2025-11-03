@@ -30,7 +30,7 @@ const AppRoutes = () => {
             element={
               isAuthenticated ? (
                 user?.role === "ADMIN" || user?.roles?.includes("ADMIN") ? (
-                  <Navigate to="/admin-config" replace />
+                  <Navigate to="/report" replace />
                 ) : (
                   <Navigate to="/task-management" replace />
                 )
@@ -83,7 +83,7 @@ const AppRoutes = () => {
             element={
               isAuthenticated ? (
                 user?.role === "ADMIN" || user?.roles?.includes("ADMIN") ? (
-                  <Navigate to="/admin-config" replace />
+                  <Navigate to="/report" replace />
                 ) : (
                   <Navigate to="/task-management" replace />
                 )
