@@ -201,7 +201,7 @@ const TaskStatusInformationForm = ({
 
   const isFieldDisabled = (field) => {
     if (!isEditMode) return false;
-    return !["executionNote", "status", "taskType"].includes(field);
+    return !["executionNote", "status", ].includes(field);
   };
 
   const wrapWithRef = (field, element) => (

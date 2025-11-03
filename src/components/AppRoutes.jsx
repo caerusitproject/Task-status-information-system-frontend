@@ -10,6 +10,7 @@ const MainLayout = lazy(() => import("./layout/MainLayout"));
 const NotFoundPage = lazy(() => import("./common/NotFoundPage"));
 const ProtectedRoute = lazy(() => import("./auth/ProtectedRoute"));
 const AdminConfig = lazy(() => import("../pages/admin/AdminConfigurationPage"));
+const Report =  lazy(() => import("../pages/Report/Report"));
 // Lazy load pages
 const Home = lazy(() => import("../pages/home/Home"));
 
@@ -66,6 +67,14 @@ const AppRoutes = () => {
                 </Suspense>
               }
             />
+            <Route
+              path="report"
+              element={
+                <Suspense fallback={<CustomLoader />}>
+                  <Report />
+                </Suspense>
+              }
+            />
           </Route>
 
           {/* Catch-all route for invalid paths */}
@@ -73,9 +82,13 @@ const AppRoutes = () => {
             path="*"
             element={
               isAuthenticated ? (
-                <Navigate to="/home" replace />
+                user?.role === "ADMIN" || user?.roles?.includes("ADMIN") ? (
+                  <Navigate to="/admin-config" replace />
+                ) : (
+                  <Navigate to="/task-management" replace />
+                )
               ) : (
-                <Navigate to="/login" replace />
+                <Login />
               )
             }
           />

@@ -6,16 +6,33 @@ const TaskCard = ({ task, onEdit }) => {
   const [expanded, setExpanded] = useState(false)
 
   const getStatusColor = (status) => {
-    const statusColors = {
-      Completed: { bg: "#e8f5e9", text: theme.colors.success },
-      "In-Progress": { bg: "#fff3e0", text: theme.colors.warning },
-      "Not Started": { bg: "#f3e5f5", text: "#9c27b0" },
-      "On Hold": { bg: "#e3f2fd", text: theme.colors.primary },
+  const statusColors = {
+    NEW: { 
+      bg: "#f3e5f5", // soft lavender
+      text: "#9c27b0" // purple accent
+    },
+    IN_PROGRESS: { 
+      bg: "#e3f2fd", // light blue
+    text: theme.colors.primary
+    },
+    COMPLETED: { 
+      bg: "#e8f5e9", // light green
+      text: theme.colors.success || "#4caf50" // fallback
+    },
+    BLOCKED: { 
+       bg: "#f5e5e5ff", // soft lavender
+      text: theme.colors.error || "#9c27b0" // purple accent
     }
-    return statusColors[status] || { bg: "#f5f5f5", text: theme.colors.text.secondary }
-  }
+  };
 
-  const statusColor = getStatusColor(task.status)
+  return statusColors[status] || { 
+    bg: "#f5f5f5", 
+    text: theme.colors.text?.secondary || "#757575" 
+  };
+};
+
+// Usage (ensures object is always returned)
+const statusColor = getStatusColor(task.status);
 
   return (
     <div
@@ -96,11 +113,16 @@ const TaskCard = ({ task, onEdit }) => {
 
         {/* Action Buttons */}
         <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexShrink: 0,
-          }}
+          sx={{
+          display: "flex",
+          justifyContent: "flex-end", // ✅ fixed typo: "fex-end" → "flex-end"
+          alignItems: "center",
+          width: "100%", // ✅ ensures it spans full width
+          flexWrap: "nowrap", // ✅ prevents wrapping that could shift the button left
+          gap: 2,
+          mt: 2,
+          marginBottom: "15px", // optional margin-top for spacing
+        }}
         >
           <button
             onClick={() => onEdit(task)}

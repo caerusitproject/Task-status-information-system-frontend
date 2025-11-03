@@ -94,7 +94,7 @@ const MainLayout = () => {
           <Outlet />
         </div>
 
-        <Footer />
+       
       </div>
     </div>
   );

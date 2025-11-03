@@ -22,7 +22,7 @@ import { theme as customTheme } from "../../theme/theme";
 import Button from "../../components/common/Button";
 import { TicketingSystemApi } from "../../api/ticketingSystemApi";
 import { ApplicationApi } from "../../api/applicationApi";
-
+import Alert from "../../components/common/Alert";
 export default function AdminConfig() {
   const [activeTab, setActiveTab] = useState(0);
   const [ticketingSystems, setTicketingSystems] = useState([]);
@@ -42,6 +42,9 @@ export default function AdminConfig() {
     description: "",
   });
   const [loading, setLoading] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertSeverity, setAlertSeverity] = useState("success"); // "success" | "error"
+  const [alertMessage, setAlertMessage] = useState("");
 
   // ✅ Fetch Ticketing Systems
   const fetchTicketingSystems = async (page = 1) => {
@@ -106,14 +109,19 @@ export default function AdminConfig() {
     setFormData(item || { id: null, name: "", description: "" });
     setOpen(true);
   };
-
   const handleSave = async () => {
     const isTicket = activeTab === 0;
     const API = isTicket ? TicketingSystemApi : ApplicationApi;
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim()) {
+      setAlertSeverity("error");
+      setAlertMessage("Name is required.");
+      setAlertOpen(true);
+      return;
+    }
 
     setLoading(true);
     try {
+      let response;
       if (formData.id) {
         const payload = isTicket
           ? {
@@ -124,7 +132,7 @@ export default function AdminConfig() {
               applicationName: formData.name,
               applicationDescription: formData.description,
             };
-        await API.edit(formData.id, payload);
+        response = await API.edit(formData.id, payload);
       } else {
         const payload = isTicket
           ? {
@@ -135,10 +143,28 @@ export default function AdminConfig() {
               applicationName: formData.name,
               applicationDescription: formData.description,
             };
-        await API.create(payload);
+        response = await API.create(payload);
       }
+
+      // Success: show message from API
+      const successMsg =
+        response?.message ||
+        (formData.id ? "Updated successfully" : "Created successfully");
+      setAlertSeverity("success");
+      setAlertMessage(successMsg);
+      setAlertOpen(true);
+
+      // Refetch data
       isTicket ? fetchTicketingSystems() : fetchApplications();
     } catch (err) {
+      // Error: show message from API or fallback
+      const errorMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "An error occurred. Please try again.";
+      setAlertSeverity("error");
+      setAlertMessage(errorMsg);
+      setAlertOpen(true);
       console.error("Save failed:", err);
     } finally {
       setOpen(false);
@@ -155,6 +181,11 @@ export default function AdminConfig() {
   const handleDeleteConfirm = async () => {
     // Optional: implement delete API later
     setDeleteConfirmOpen(false);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    setAlertMessage("");
   };
 
   const handlePageChange = (direction) => {
@@ -175,10 +206,10 @@ export default function AdminConfig() {
       <Box
         sx={{
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
           marginBottom: "20px",
-          flexWrap: "wrap",
+          justifyContent: "space-between",
+          flexWrap: "nowrap", // prevent wrapping
           gap: 2,
         }}
       >
@@ -188,7 +219,6 @@ export default function AdminConfig() {
             fontWeight: 700,
             color: customTheme.colors.text.primary,
             margin: 0,
-            flex: 1,
           }}
         >
           Admin Configuration
@@ -204,6 +234,7 @@ export default function AdminConfig() {
             padding: "10px 20px",
             fontWeight: 500,
             boxShadow: customTheme.shadows.small,
+            marginLeft: "auto", // pushes button to the right
           }}
         >
           + {currentType}
@@ -242,27 +273,66 @@ export default function AdminConfig() {
       </Paper>
 
       {/* Table */}
-      <Paper sx={{ overflowX: "auto", borderRadius: customTheme.borderRadius.large }}>
+      <Paper
+        sx={{ overflowX: "auto", borderRadius: customTheme.borderRadius.large }}
+      >
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: customTheme.colors.gray }}>
-              <TableCell><b>Name</b></TableCell>
-              <TableCell><b>Description</b></TableCell>
-              <TableCell align="right"><b>Actions</b></TableCell>
+              <TableCell>
+                <b>Name</b>
+              </TableCell>
+              <TableCell>
+                <b>Description</b>
+              </TableCell>
+              <TableCell align="right">
+                <b>Actions</b>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={3} align="center">Loading...</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  Loading...
+                </TableCell>
+              </TableRow>
             ) : currentData.length === 0 ? (
-              <TableRow><TableCell colSpan={3} align="center">No {currentType.toLowerCase()}s found</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No {currentType.toLowerCase()}s found
+                </TableCell>
+              </TableRow>
             ) : (
               currentData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.description}</TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 100, // max width in px
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {item.name}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 100, // max width in px
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {item.description}
+                  </TableCell>
+
                   <TableCell align="right">
-                    <IconButton onClick={() => handleOpen(item)} size="small" sx={{ color: customTheme.colors.primary }}>
+                    <IconButton
+                      onClick={() => handleOpen(item)}
+                      size="small"
+                      sx={{ color: customTheme.colors.primary }}
+                    >
                       <Edit fontSize="small" />
                     </IconButton>
                     {/* <IconButton onClick={() => handleDelete(item)} size="small" sx={{ color: customTheme.colors.error }}>
@@ -277,8 +347,17 @@ export default function AdminConfig() {
       </Paper>
 
       {/* Pagination */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mt: 2, gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          mt: 2,
+          gap: 2,
+        }}
+      >
         <Button
+          type="secondary"
           disabled={!pagination.previousPage}
           onClick={() => handlePageChange("prev")}
         >
@@ -288,6 +367,7 @@ export default function AdminConfig() {
           Page {pagination.currentPage} of {pagination.totalPages}
         </Typography>
         <Button
+          type="secondary"
           disabled={!pagination.nextPage}
           onClick={() => handlePageChange("next")}
         >
@@ -296,7 +376,12 @@ export default function AdminConfig() {
       </Box>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>
           {formData.id ? `Edit ${currentType}` : `Create ${currentType}`}
         </DialogTitle>
@@ -313,7 +398,9 @@ export default function AdminConfig() {
             fullWidth
             label="Description"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             margin="normal"
             multiline
             rows={3}
@@ -335,7 +422,12 @@ export default function AdminConfig() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           Are you sure you want to delete <b>{deleteItem?.name}</b>?
@@ -354,6 +446,13 @@ export default function AdminConfig() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Alert
+        open={alertOpen}
+        onClose={handleAlertClose}
+        severity={alertSeverity}
+        message={alertMessage}
+        autoHideDuration={6000}
+      />
     </div>
   );
 }

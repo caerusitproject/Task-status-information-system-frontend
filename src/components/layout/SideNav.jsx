@@ -133,19 +133,50 @@ const SideNav = ({ collapsed, onToggle }) => {
             </button>
           )}
           {!collapsed && (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <img
-                src={CompanyLogo}
-                alt="Company Logo"
+           <div style={{ display: "flex", alignItems: "center" }}>
+              {/* <div
                 style={{
-                  height: isMobile ? "62px" : "75px", // increased height
-                  width: isMobile ? "auto" : "auto", // keeps aspect ratio
-                  maxWidth: "200px", // ensures it doesn’t stretch too much
-                  objectFit: "contain",
-                  position: "relative",
-                  zIndex: 1,
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: theme.borderRadius.round,
+                  backgroundColor: theme.colors.primary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: theme.colors.white,
+                  fontWeight: "bold",
+                  marginRight: theme.spacing.md,
                 }}
-              />
+              >
+                {user.name?.charAt(0).toUpperCase() || "U"}
+              </div> */}
+              <div>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    color: theme.colors.text.primary,
+                    fontSize: "14px",
+                  }}
+                >
+                  {user.name || "User"}
+                </div>
+                {/* <div
+                  style={{
+                    fontSize: "12px",
+                    color: theme.colors.text.secondary,
+                  }}
+                >
+                  {user.email}
+                </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: theme.colors.text.secondary,
+                  }}
+                >
+                  Role: {user.role === "USER" ? "Employee" : user.role || "N/A"}
+                </div> */}
+              </div>
             </div>
           )}
         </div>
@@ -177,7 +208,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </div>
               <div>
-                <div
+                {/* <div
                   style={{
                     fontWeight: "600",
                     color: theme.colors.text.primary,
@@ -185,7 +216,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                   }}
                 >
                   {user.name || "User"}
-                </div>
+                </div> */}
                 <div
                   style={{
                     fontSize: "12px",
@@ -408,7 +439,7 @@ const SideNav = ({ collapsed, onToggle }) => {
               sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}
             >
               <Button
-                type="secondery"
+                type="secondary"
                 onClick={() => setShowLogoutModal(false)}
               >
                 Cancel
