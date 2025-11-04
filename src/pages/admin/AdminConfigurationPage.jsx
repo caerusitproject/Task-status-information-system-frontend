@@ -242,10 +242,12 @@ export default function AdminConfig() {
       </Box>
 
       {/* Tabs */}
-      <Paper sx={{ mb: 2, borderRadius: customTheme.borderRadius.large }}>
+      <Paper sx={{ mb: 2, borderRadius: customTheme.borderRadius.medium }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto" // 👈 enables horizontal scroll if tabs overflow
           sx={{
             "& .MuiTab-root": {
               textTransform: "none",
@@ -254,6 +256,8 @@ export default function AdminConfig() {
               minHeight: "60px",
               borderRadius: customTheme.borderRadius.medium,
               color: customTheme.colors.text.secondary,
+              minWidth: { xs: "110px", sm: "140px", md: "180px" }, // 👈 responsive widths
+              marginRight: { xs: "6px", sm: "10px", md: "12px" }, // 👈 responsive gap
             },
             "& .Mui-selected": {
               color: customTheme.colors.primary,

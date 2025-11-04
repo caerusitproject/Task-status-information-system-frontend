@@ -102,7 +102,7 @@ const TaskStatusInformationForm = ({
 }) => {
   const [formData, setFormData] = useState({
     taskTitle: "",
-    taskType: "Assign",
+    taskType: "Assignment",
     ticketId: "",
     ticketingSystem: "",
     application: "",
@@ -128,7 +128,7 @@ const TaskStatusInformationForm = ({
     if (initialData) {
       setFormData({
         taskTitle: initialData.taskTitle || "",
-        taskType: initialData.taskType || "Assign",
+        taskType: initialData.taskType || "Assignment",
         ticketId: initialData.ticketId || "",
         ticketingSystem: initialData.ticketingSystem || "",
         application: initialData.application || "",
@@ -266,7 +266,7 @@ const TaskStatusInformationForm = ({
             value={formData.taskType}
             onChange={(value) => handleChange("taskType", value)}
             options={[
-              { value: "Assign", label: "Assign" },
+              { value: "Assignment", label: "Assignment" },
               { value: "Issue", label: "Issue" },
             ]}
             required
@@ -360,7 +360,7 @@ const TaskStatusInformationForm = ({
         {wrapWithRef(
           "executionNote",
           <Input
-            label="Execution Note"
+            label="Progress Note"
             name="executionNote"
             type="textarea"
             value={formData.executionNote}
@@ -384,7 +384,7 @@ const TaskStatusInformationForm = ({
               { value: "NEW", label: "New" },
               { value: "IN_PROGRESS", label: "In-Progress" },
               { value: "COMPLETED", label: "Completed" },
-              { value: "BLOCKED", label: "Blocked" },
+              { value: "ON_HOLD", label: "On Hold" },
             ]}
             required
             errors={{ status: errors.status }}

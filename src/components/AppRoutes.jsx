@@ -10,7 +10,7 @@ const MainLayout = lazy(() => import("./layout/MainLayout"));
 const NotFoundPage = lazy(() => import("./common/NotFoundPage"));
 const ProtectedRoute = lazy(() => import("./auth/ProtectedRoute"));
 const AdminConfig = lazy(() => import("../pages/admin/AdminConfigurationPage"));
-const Report =  lazy(() => import("../pages/report/Report"));
+const Report =  lazy(() => import("../pages/report/GenerateReport"));
 // Lazy load pages
 const Home = lazy(() => import("../pages/home/Home"));
 

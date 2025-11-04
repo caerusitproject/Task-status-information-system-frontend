@@ -19,7 +19,7 @@ const TaskCard = ({ task, onEdit }) => {
       bg: "#e8f5e9", // light green
       text: theme.colors.success || "#4caf50" // fallback
     },
-    BLOCKED: { 
+    ON_HOLD: { 
        bg: "#f5e5e5ff", // soft lavender
       text: theme.colors.error || "#9c27b0" // purple accent
     }

@@ -137,7 +137,7 @@ const TaskList = () => {
     New: "NEW",
     "In-Progress": "IN_PROGRESS",
     Completed: "COMPLETED",
-    Blocked: "BLOCKED",
+    "On-Hold": "On Hold",
   };
 
   const handleSave = async (formData) => {
