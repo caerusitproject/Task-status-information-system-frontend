@@ -1,3 +1,4 @@
+// MainLayout.jsx
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import SideNav from "./SideNav";
@@ -36,9 +37,10 @@ const MainLayout = () => {
         display: "flex",
         minHeight: "100vh",
         backgroundColor: theme.colors.background,
+        color: theme.colors.text.primary,
       }}
     >
-      {/* Hamburger Menu for Mobile */}
+      {/* Mobile Hamburger */}
       {sidenavCollapsed && (
         <button
           onClick={toggleSidenav}
@@ -46,9 +48,9 @@ const MainLayout = () => {
             position: "fixed",
             top: theme.spacing.md,
             left: theme.spacing.sm,
-            zIndex: isMobile? 10 : 10001,
-            background: theme.colors.white,
-            border: `1px solid ${theme.colors.lightGray}`,
+            zIndex: isMobile ? 10 : 10001,
+            background: theme.colors.surface,
+            border: `1px solid ${theme.colors.darkGray}`,
             borderTopRightRadius: "8px",
             borderBottomRightRadius: "8px",
             padding: "2px",
@@ -57,6 +59,7 @@ const MainLayout = () => {
             marginLeft: isMobile ? "6px" : "25px",
             marginTop: isMobile ? "0px" : "12px",
             boxShadow: theme.shadows.small,
+            color: theme.colors.text.secondary,
           }}
         >
           ☰
@@ -92,8 +95,6 @@ const MainLayout = () => {
         >
           <Outlet />
         </div>
-
-       
       </div>
     </div>
   );

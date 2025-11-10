@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import CustomLoader from "../components/common/CustomLoader";
-
 const Login = lazy(() => import("../pages/auth/Login"));
 const MainLayout = lazy(() => import("./layout/MainLayout"));
 const NotFoundPage = lazy(() => import("./common/NotFoundPage"));
@@ -13,7 +12,7 @@ const AdminConfig = lazy(() => import("../pages/admin/AdminConfigurationPage"));
 const Report =  lazy(() => import("../pages/report/GenerateReport"));
 // Lazy load pages
 const Home = lazy(() => import("../pages/home/Home"));
-
+const Timesheet = lazy(() => import("../pages/timesheet/Timesheet"));
 const TaskManagementApp = lazy(() => import("../pages/Task/Task"));
 const AppRoutes = () => {
   const { isAuthenticated ,user} = useAuth();
@@ -60,6 +59,14 @@ const AppRoutes = () => {
               }
             />
             <Route
+              path="timesheet"
+              element={
+                <Suspense fallback={<CustomLoader />}>
+                  <Timesheet />
+                </Suspense>
+              }
+            />
+            <Route
               path="admin-config"
               element={
                 <Suspense fallback={<CustomLoader />}>
@@ -91,7 +98,7 @@ const AppRoutes = () => {
                 <Login />
               )
             }
-          />
+          />  
         </Routes>
       </Suspense>
     </div>

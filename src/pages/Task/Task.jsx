@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { theme } from "../../theme/theme";
 import Button from "../../components/common/Button";
 import TaskCard from "./TaskCard";
 import TaskStatusInformationForm from "./TaskStatusInformationForm";
@@ -29,6 +28,7 @@ import {
   Tab,
 } from "@mui/material";
 import Alert from "../../components/common/Alert";
+import { theme } from "../../theme/theme";
 
 const TaskList = () => {
   const { user } = useAuth();

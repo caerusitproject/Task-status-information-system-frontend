@@ -1,10 +1,9 @@
-// SideNav.jsx (updated with dynamic profile navigation and conditional highlighting)
+// SideNav.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { theme } from "../../theme/theme";
-import { COMPANY_INFO } from "../../utils/constants";
-import { menuItems } from "./menuItems"; // Import from separate file
+import { menuItems } from "./menuItems";
 import CompanyLogo from "../../assets/caerus-logo.png";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { Modal, Box, Typography } from "@mui/material";
@@ -41,7 +40,6 @@ const SideNav = ({ collapsed, onToggle }) => {
     setShowLogoutModal(false);
   };
 
-  // Updated handleNavigation: For profile, always use current user ID
   const handleNavigation = (path, itemKey) => {
     if (itemKey === "profile" && user?.id) {
       navigate(`/employee-profile/${user.id}`);
@@ -69,7 +67,7 @@ const SideNav = ({ collapsed, onToggle }) => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
             zIndex: 999,
           }}
           onClick={onToggle}
@@ -82,7 +80,7 @@ const SideNav = ({ collapsed, onToggle }) => {
           width: collapsed ? "80px" : "260px",
           maxWidth: "90%",
           height: "100vh",
-          backgroundColor: theme.colors.white,
+          backgroundColor: theme.colors.surface,
           borderRight: `1px solid ${theme.colors.lightGray}`,
           display: "flex",
           flexDirection: "column",
@@ -98,6 +96,7 @@ const SideNav = ({ collapsed, onToggle }) => {
           overflow: "hidden",
         }}
       >
+        {/* Header */}
         <div
           style={{
             padding: isMobile ? "0" : theme.spacing.md,
@@ -133,23 +132,7 @@ const SideNav = ({ collapsed, onToggle }) => {
             </button>
           )}
           {!collapsed && (
-           <div style={{ display: "flex", alignItems: "center" }}>
-              {/* <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: theme.borderRadius.round,
-                  backgroundColor: theme.colors.primary,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: theme.colors.white,
-                  fontWeight: "bold",
-                  marginRight: theme.spacing.md,
-                }}
-              >
-                {user.name?.charAt(0).toUpperCase() || "U"}
-              </div> */}
+            <div style={{ display: "flex", alignItems: "center" }}>
               <div>
                 <div
                   style={{
@@ -160,34 +143,17 @@ const SideNav = ({ collapsed, onToggle }) => {
                 >
                   {user.name || "User"}
                 </div>
-                {/* <div
-                  style={{
-                    fontSize: "12px",
-                    color: theme.colors.text.secondary,
-                  }}
-                >
-                  {user.email}
-                </div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: theme.colors.text.secondary,
-                  }}
-                >
-                  Role: {user.role === "USER" ? "Employee" : user.role || "N/A"}
-                </div> */}
               </div>
             </div>
           )}
         </div>
-
         {/* User Info */}
         {!collapsed && user && (
           <div
             style={{
               padding: isMobile ? `${theme.spacing.sm}` : `${theme.spacing.md}`,
               borderBottom: `1px solid ${theme.colors.lightGray}`,
-              backgroundColor: theme.colors.background,
+              backgroundColor: theme.colors.mediumGray,
             }}
           >
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -208,19 +174,10 @@ const SideNav = ({ collapsed, onToggle }) => {
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </div>
               <div>
-                {/* <div
-                  style={{
-                    fontWeight: "600",
-                    color: theme.colors.text.primary,
-                    fontSize: "14px",
-                  }}
-                >
-                  {user.name || "User"}
-                </div> */}
                 <div
                   style={{
                     fontSize: "12px",
-                    color: theme.colors.text.secondary,
+                    color: theme.colors.text.primary,
                   }}
                 >
                   {user.email}
@@ -247,22 +204,15 @@ const SideNav = ({ collapsed, onToggle }) => {
           }}
         >
           {filteredMenuItems.map((item) => {
-            // Enhanced isActive logic: For profile, only active if exactly on own profile path
             const isActive = (() => {
               const currentPath = location.pathname;
-
-              // Direct match
               if (currentPath === item.path) return true;
-
-              // Handle nested routes - check if current path starts with menu item path
               if (item.path !== "/" && currentPath.startsWith(item.path)) {
                 const remainingPath = currentPath.substring(item.path.length);
-                // Check if it's a proper nested route (starts with / or is empty)
                 if (remainingPath === "" || remainingPath.startsWith("/")) {
                   return true;
                 }
               }
-
               if (item.key === "profile" && user?.id) {
                 const ownProfilePath = `/employee-profile/${user.id}`;
                 const ownEditPath = `/employee/edit/${user.id}`;
@@ -290,12 +240,12 @@ const SideNav = ({ collapsed, onToggle }) => {
                   cursor: "pointer",
                   backgroundColor: isActive
                     ? collapsed && !isMobile
-                      ? `${theme.colors.primaryLight}34` // Primary dark when collapsed
-                      : `${theme.colors.primaryLight}22` // Light primary when expanded
+                      ? `${theme.colors.primary}22`
+                      : `${theme.colors.primaryLight}18`
                     : "transparent",
                   borderRight:
                     collapsed && !isMobile && isActive
-                      ? "none" // Remove the right border WHILE ITS COLLAPSED
+                      ? "none"
                       : isActive
                       ? `4px solid ${theme.colors.primary}`
                       : "none",
@@ -315,7 +265,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                 onMouseEnter={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.backgroundColor =
-                      theme.colors.mediumGray + "22";
+                      theme.colors.mediumGray + "33";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -342,7 +292,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                 {collapsed && !isMobile && (
                   <span
                     style={{
-                      fontSize: "10px",
+                      fontSize: "10",
                       marginTop: "2px",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
@@ -359,50 +309,51 @@ const SideNav = ({ collapsed, onToggle }) => {
           })}
         </div>
 
-        {/* Footer Actions */}
-        {
-          <div
+        {/* Logout Button */}
+        <div
+          style={{
+            padding:
+              collapsed && !isMobile ? theme.spacing.md : theme.spacing.md,
+            borderTop: `1px solid ${theme.colors.lightGray}`,
+            backgroundColor: theme.colors.darkGray,
+          }}
+        >
+          <button
+            onClick={handleLogout}
             style={{
+              width: "100%",
               padding:
-                collapsed && !isMobile ? theme.spacing.md : theme.spacing.md,
-              borderTop: `1px solid ${theme.colors.lightGray}`,
-              backgroundColor: theme.colors.background,
+                collapsed && !isMobile ? theme.spacing.xs : theme.spacing.md,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed && !isMobile ? "center" : "flex-start",
+              fontSize: collapsed && !isMobile ? "20px" : "16px",
+              borderRadius: theme.borderRadius.large,
+              backgroundColor: "transparent",
+              border: "none",
+              color: theme.colors.error,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.colors.error + "20";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
             }}
           >
-            <button
-              onClick={handleLogout}
-              className="btn-secondary"
+            <span
               style={{
-                width: "100%",
-                padding:
-                  collapsed && !isMobile ? theme.spacing.xs : theme.spacing.md,
-                display: "flex",
-                alignItems: "center",
-                justifyContent:
-                  collapsed && !isMobile ? "center" : "flex-start",
+                marginRight: collapsed && !isMobile ? "0" : theme.spacing.sm,
                 fontSize: collapsed && !isMobile ? "20px" : "16px",
-                borderRadius: theme.borderRadius.large,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  theme.colors.error + "20";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "";
               }}
             >
-              <span
-                style={{
-                  marginRight: collapsed && !isMobile ? "0" : theme.spacing.sm,
-                  fontSize: collapsed && !isMobile ? "20px" : "16px",
-                }}
-              >
-                <ExitToAppIcon fontSize="inherit" color="error" />
-              </span>
-              {(!collapsed || isMobile) && "Logout"}
-            </button>
-          </div>
-        }
+              <ExitToAppIcon fontSize="inherit" color="error" />
+            </span>
+            {(!collapsed || isMobile) && "Logout"}
+          </button>
+        </div>
+
+        {/* Logout Modal */}
         <Modal
           open={showLogoutModal}
           onClose={() => setShowLogoutModal(false)}
@@ -415,24 +366,32 @@ const SideNav = ({ collapsed, onToggle }) => {
         >
           <Box
             sx={{
-              backgroundColor: "white",
+              backgroundColor: theme.colors.surface,
               padding: 4,
               borderRadius: 2,
               boxShadow: 24,
               maxWidth: 400,
               textAlign: "center",
+              color: theme.colors.text.primary,
             }}
           >
             <Typography
               id="logout-modal-title"
               variant="subtitle1"
-              sx={{ fontWeight: 700, fontSize: "1.3rem" }} // ✅ slightly smaller + bold
+              sx={{
+                fontWeight: 700,
+                fontSize: "1.3rem",
+                color: theme.colors.text.primary,
+              }}
               gutterBottom
             >
               Confirm Logout
             </Typography>
-
-            <Typography variant="body1" gutterBottom>
+            <Typography
+              variant="body1"
+              gutterBottom
+              sx={{ color: theme.colors.text.secondary }}
+            >
               Are you sure you want to logout?
             </Typography>
             <Box
