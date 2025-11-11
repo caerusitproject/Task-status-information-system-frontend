@@ -20,9 +20,8 @@ export default function TaskCard({ task: initialTask }) {
     resolutions,
   } = task;
 
-  const isIssueResolved =
-    taskType === "Issue" && ["Resolved", "Completed"].includes(status);
-
+  const isIssue = taskType.toLowerCase() === "issue";
+  const showResolution = isIssue && status === "Resolved";
   const textAreaRows = 4;
 
   const updateField = (field, value) => {
@@ -41,6 +40,8 @@ export default function TaskCard({ task: initialTask }) {
         minHeight: "180px",
         mb: 0,
         boxShadow: theme.shadows.medium,
+        flexDirection: { xs: "column", md: "row" }, // ← Stack on mobile
+        gap: { xs: 0, md: 0 },
       }}
     >
       {/* LEFT – TASK ID (Only show if ticket exists) */}
@@ -48,7 +49,8 @@ export default function TaskCard({ task: initialTask }) {
         sx={{
           bgcolor: "#2d2d2d",
           color: "#fff",
-          width: "120px",
+          width: { xs: "100%", md: "120px" },
+          minHeight: { xs: "80px", md: "auto" },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -84,15 +86,21 @@ export default function TaskCard({ task: initialTask }) {
       {/* MIDDLE – EDITABLE CONTENT */}
       <Box
         sx={{
-          flex: 1,
-          p: 2,
+          flex: { xs: "1", md: 2 },
+          p: { xs: 1.5, md: 2 },
+          pb: { xs: 1, md: 0 },
+          minHeight: { xs: "120px", md: "auto" },
           display: "flex",
           flexDirection: "column",
           color: "#000",
+          width: { xs: "100%", md: "auto" },
+          backgroundColor: colorCode,
+          overflow: "hidden",
         }}
       >
-        {isIssueResolved ? (
+        {isIssue ? (
           <>
+            {/* Always show Investigation & RCA */}
             <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", mb: 0.5 }}>
               Investigation and RCA.
             </Typography>
@@ -109,37 +117,39 @@ export default function TaskCard({ task: initialTask }) {
                 fontFamily: "inherit",
                 color: "#000",
                 outline: "none",
-                marginBottom: "0.75rem",
               }}
               placeholder="Describe the investigation findings and the root cause of the issue..."
             />
 
-            <Box
-              sx={{
-                borderTop: "1px solid rgba(0,0,0,0.7)",
-                my: 1.5,
-              }}
-            />
+            
 
-            <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", mb: 0.5 }}>
-              Resolution and steps taken to mitigate the issues.
-            </Typography>
-            <TextareaAutosize
-              value={resolutions || ""}
-              onChange={(e) => updateField("resolutions", e.target.value)}
-              minRows={textAreaRows}
-              style={{
-                width: "100%",
-                border: "none",
-                background: "transparent",
-                resize: "none",
-                fontSize: "0.875rem",
-                fontFamily: "inherit",
-                color: "#000",
-                outline: "none",
-              }}
-              placeholder="Document the resolution steps and any measures taken to prevent recurrence..."
-            />
+            {/* Show Resolution ONLY if status === "Resolved" */}
+            {showResolution && (
+              <>
+              <Box sx={{ borderTop: "1px solid rgba(0,0,0,0.7)", my: 1.5 }} />
+                <Typography
+                  sx={{ fontWeight: 600, fontSize: "0.875rem", mb: 0.5 }}
+                >
+                  Resolution and steps taken to mitigate the issues.
+                </Typography>
+                <TextareaAutosize
+                  value={resolutions || ""}
+                  onChange={(e) => updateField("resolutions", e.target.value)}
+                  minRows={textAreaRows}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    background: "transparent",
+                    resize: "none",
+                    fontSize: "0.875rem",
+                    fontFamily: "inherit",
+                    color: "#000",
+                    outline: "none",
+                  }}
+                  placeholder="Document the resolution steps and any measures taken to prevent recurrence..."
+                />
+              </>
+            )}
           </>
         ) : (
           <>
@@ -173,16 +183,17 @@ export default function TaskCard({ task: initialTask }) {
         sx={{
           bgcolor: "#3a3a3a",
           color: "#fff",
-          width: "140px",
+          width: { xs: "100%", md: "200px" },
+          minHeight: { xs: "140px", md: "auto" },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "flex-start",
           p: 1,
-          pt: 1.5, // Push everything down slightly
+          pt: 1.5,
         }}
       >
-        {/* HH:MM – Moved down from top */}
+        {/* HH:MM */}
         <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
           <InputBase
             value={hours ?? ""}
@@ -238,20 +249,38 @@ export default function TaskCard({ task: initialTask }) {
           />
         </Box>
 
-        {/* TICKET – Show only if ticketId exists, closer to buttons */}
-        {/* TICKET + U/R/C — Grouped & pushed to bottom */}
+        {/* TICKET + SR CHIP + U/R/C — Pushed to bottom */}
         <Box
           sx={{
-            mt: "auto", // Push to bottom
+            mt: "auto",
             width: "100%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 2.4,
+            gap: 1.5,
           }}
         >
-          {/* Ticket ID */}
+          {/* SR Number Chip – ONLY for Issues & if srNo exists */}
+          {isIssue && task.srNo && (
+            <Chip
+              label={`SR: ${task.srNo}`}
+              sx={{
+                bgcolor: "#1a1a1a",
+                color: "#fff",
+                px: 1.5,
+                py: 0.5,
+                borderRadius: "999px",
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                maxWidth: "100%",
+                width: "fit-content",
+                mx: "auto",
+                mb: 0.5,
+              }}
+            />
+          )}
 
+          {/* Ticket ID Chip */}
           {ticketId && (
             <Chip
               label={ticketId}
@@ -262,25 +291,31 @@ export default function TaskCard({ task: initialTask }) {
                 py: 0.5,
                 borderRadius: "999px",
                 fontSize: "0.75rem",
-                width: "100%",
-                textAlign: "center",
-                "& .MuiInputBase-input": { p: 0 },
+                maxWidth: "100%",
+                width: "fit-content",
+                mx: "auto",
               }}
             />
           )}
 
           {/* U/R/C Buttons */}
-          <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Box sx={{ display: "flex", gap: 4 }}>
             <IconButton
               size="small"
               sx={{
                 bgcolor: colorCode,
                 color: "#000",
-                width: 28,
-                height: 28,
-                fontSize: "0.75rem",
+                width: 36,
+                height: 36,
+                fontSize: "0.875rem",
                 fontWeight: "bold",
-                "&:hover": { filter: "brightness(0.9)" },
+                borderRadius: 1,
+                transition: "all 0.2s",
+                "&:hover": {
+                  bgcolor: "#fff",
+                  color: "#000",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                },
               }}
             >
               U
@@ -292,11 +327,17 @@ export default function TaskCard({ task: initialTask }) {
                   sx={{
                     bgcolor: colorCode,
                     color: "#000",
-                    width: 28,
-                    height: 28,
-                    fontSize: "0.75rem",
+                    width: 36,
+                    height: 36,
+                    fontSize: "0.875rem",
                     fontWeight: "bold",
-                    "&:hover": { filter: "brightness(0.9)" },
+                    borderRadius: 1,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: "#fff",
+                      color: "#000",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                    },
                   }}
                 >
                   R
@@ -306,11 +347,17 @@ export default function TaskCard({ task: initialTask }) {
                   sx={{
                     bgcolor: colorCode,
                     color: "#000",
-                    width: 28,
-                    height: 28,
-                    fontSize: "0.75rem",
+                    width: 36,
+                    height: 36,
+                    fontSize: "0.875rem",
                     fontWeight: "bold",
-                    "&:hover": { filter: "brightness(0.9)" },
+                    borderRadius: 1,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: "#fff",
+                      color: "#000",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                    },
                   }}
                 >
                   C

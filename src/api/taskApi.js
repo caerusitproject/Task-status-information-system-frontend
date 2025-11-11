@@ -2,64 +2,99 @@ import axios from "axios";
 
 const LOCAL_API = "http://localhost:3000/api";
 
-// ✅ Always get latest token for Authorization header
 const getAuthHeaders = () => {
-  //const token = getCookie("accessToken");
   return {
     "Content-Type": "application/json",
   };
 };
 
-// ✅ Employee API object
 export const TaskApi = {
-  async view(page = 1, pageSize = 10) {
-    try {
-      const response = await axios.get(
-        `${LOCAL_API}/taskStatusInfo/view?page=${page}&pagesize=${pageSize}`,
-        { headers: getAuthHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error fetching Task Status Info:",
-        error.response?.data || error.message
-      );
-      throw error;
-    }
-  },
-
-  async create(data) {
+  // ✅ CREATE TASK
+  // TaskType = "assignment" || "issue" || "change_request"
+  async create(taskType, data) {
     try {
       const response = await axios.post(
-        `${LOCAL_API}/taskStatusInfo/create/`,
+        `${LOCAL_API}/timeSheet/create/${taskType}`,
         data,
         { headers: getAuthHeaders() }
       );
       return response.data;
     } catch (error) {
       console.error(
-        "Error creating Task Status Info:",
-        error.response?.data || error.message
+        "Error creating task:",
+        error.response?.data?.message || error.response?.data
       );
       throw error;
     }
   },
 
-  async edit(id, data) {
+  // ✅ EDIT TASK
+  // taskId = Task unique ID
+  async edit(taskId, data) {
     try {
       const response = await axios.put(
-        `${LOCAL_API}/taskStatusInfo/edit/${id}`,
+        `${LOCAL_API}/timeSheet/editTaskId/${taskId}`,
         data,
         { headers: getAuthHeaders() }
       );
       return response.data;
     } catch (error) {
       console.error(
-        "Error editing Task Status Info:",
-        error.response?.data || error.message
+        "Error editing task:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
+
+  // ✅ GET TASK BY ID
+  async viewById(taskId) {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timeSheet/viewbyId/${taskId}`,
+         { headers: getAuthHeaders() }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching task details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
+
+  async legends() {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timeSheet/legends-colors`,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching legends details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
+  //color-pallette
+
+  async colorPallette() {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timeSheet/color-pallette`,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching legends details:",
+        error.response?.data?.message || error.response?.data
       );
       throw error;
     }
   },
 };
-
