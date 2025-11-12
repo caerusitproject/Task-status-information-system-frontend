@@ -1,6 +1,37 @@
 // src/mock/mockApi.js
 export const getWeekTasks = () => ({
   week: [
+
+    {
+      date: "2025-11-12",
+      tasks: [
+        // {
+        //   id: 7,
+        //   taskId: "CR-907",
+        //   hours: 2,
+        //   minutes: 15,
+        //   ticketId: "TCK-1007",
+        //   colorCode: "#ffb3b3",
+        //   taskType: "Change request",
+        //   status: "Completed",
+        //   updatedDate: "2025-11-09T09:45:00Z",
+        //   dailyAccomplishments: "Enhanced error logging and monitoring dashboard."
+        // },
+        {
+          id: 8,
+          taskId: "IS-908",
+          hours: 8,
+          minutes: 20,
+          ticketId: "TCK-1008",
+          colorCode: "#e8cffdff",
+          taskType: "Issue",
+          status: "Completed",
+          updatedDate: "2025-11-09T16:20:00Z",
+          investigationRCA: "Email notifications failing intermittently. SMTP misconfiguration.",
+          resolutions: "Corrected SMTP settings and tested email workflow. Monitoring ongoing."
+        }
+      ]
+    },
     {
       date: "2025-11-09",
       tasks: [
@@ -18,7 +49,7 @@ export const getWeekTasks = () => ({
         },
         {
           id: 8,
-          taskId: "IS-908",
+          taskId: "IS-901",
           hours: 3,
           minutes: 0,
           ticketId: "TCK-1008",

@@ -75,7 +75,7 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
           <IconButton
             onClick={onAddTask}
             sx={{
-              width: { xs: 38, md: 40 }, // wider for rectangular shape
+              width: { xs: 50, md: 40 }, // wider for rectangular shape
               height: { xs: 36, md: 40 }, // shorter height
               bgcolor: theme.colors.primary,
               color: "#fff",

@@ -6,6 +6,7 @@ import { theme } from "../../theme/theme";
 
 export default function TaskCard({ task: initialTask }) {
   const [task, setTask] = useState(initialTask);
+  console.log("Tasks", task);
 
   const {
     taskId,
@@ -18,10 +19,12 @@ export default function TaskCard({ task: initialTask }) {
     dailyAccomplishments,
     investigationRCA,
     resolutions,
+    updatedDate,
   } = task;
 
   const isIssue = taskType.toLowerCase() === "issue";
-  const showResolution = isIssue && status === "Resolved";
+  const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
+
   //const showC = // if its not ewua
   const textAreaRows = 4;
 
@@ -30,6 +33,13 @@ export default function TaskCard({ task: initialTask }) {
   };
 
   const ticketDisplayValue = ticketId ? `Ticket : ${ticketId}` : "";
+ const showFooter =["Resolved", "Completed", "Updated"].includes(status);
+
+  const showFooterUnderInvestigation =
+    isIssue && status === "Resolved" && !!updatedDate;
+
+  const showFooterUnderResolution =
+    isIssue && status === "Completed" && !!updatedDate;
 
   return (
     <Box
@@ -121,6 +131,25 @@ export default function TaskCard({ task: initialTask }) {
               }}
               placeholder="Describe the investigation findings and the root cause of the issue..."
             />
+            {showFooterUnderInvestigation && showFooter && updatedDate && (
+              <Box
+                sx={{
+                  mt: 1,
+                  textAlign: "right",
+                  fontSize: "0.75rem",
+                  color: "rgba(0,0,0,0.6)",
+                  fontStyle: "italic",
+                }}
+              >
+                {status} at{" "}
+                {new Date(updatedDate).toLocaleString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </Box>
+            )}
 
             {/* Show Resolution ONLY if status === "Resolved" */}
             {showResolution && (
@@ -147,6 +176,25 @@ export default function TaskCard({ task: initialTask }) {
                   }}
                   placeholder="Document the resolution steps and any measures taken to prevent recurrence..."
                 />
+                {showFooterUnderResolution && showFooter && updatedDate && (
+                  <Box
+                    sx={{
+                      mb: 1,
+                      textAlign: "right",
+                      fontSize: "0.75rem",
+                      color: "rgba(0,0,0,0.6)",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {status} at{" "}
+                    {new Date(updatedDate).toLocaleString(undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </Box>
+                )}
               </>
             )}
           </>
@@ -173,6 +221,25 @@ export default function TaskCard({ task: initialTask }) {
               }}
               placeholder="Summarize key accomplishments and progress for this task..."
             />
+            {updatedDate && showFooter &&(
+              <Box
+                sx={{
+                  mt: 1,
+                  textAlign: "right",
+                  fontSize: "0.75rem",
+                  color: "rgba(0,0,0,0.6)",
+                  fontStyle: "italic",
+                }}
+              >
+                {status} at{" "}
+                {new Date(updatedDate).toLocaleString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </Box>
+            )}
           </>
         )}
       </Box>

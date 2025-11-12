@@ -171,7 +171,7 @@ export default function Timesheet() {
       colorCode: legend.color_row,
       taskType: legend.task_type,
       status: legend.status,
-      updatedDate: new Date().toISOString(),
+      //updatedDate: new Date().toISOString(),
       dailyAccomplishments: "",
       investigationRCA: "", // Required for issues
       resolutions: "",
