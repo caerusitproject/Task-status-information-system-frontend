@@ -9,6 +9,7 @@ import DayCard from "./DayCard";
 import TaskFormDialog from "./TaskFormDialog";
 import LegendPickerDialog from "./ColorPickerDialog";
 import { theme } from "../../theme/theme";
+import { Skeleton } from "@mui/material";
 
 const statusOptions = [
   "Reported",
@@ -17,31 +18,6 @@ const statusOptions = [
   "On Hold",
   "Resolved",
   "Completed",
-];
-
-const colors = [
-  "#fcde72",
-  "#ff9c68",
-  "#7fc0ff",
-  "#ffcccc",
-  "#fcd05b",
-  "#e0caebff",
-  "#ffb07a",
-  "#99ffe0",
-  "#f3d27fff",
-  "#ff7f7f",
-  "#b3d6ff",
-  "#e1b5fdbb",
-  "#faca34",
-  "#ffb988",
-  "#ccfff7",
-  "#ff9999",
-  "#cce6ff",
-  "#ffb3b3",
-  "#7fffd4",
-  "#ffc199",
-  "#d7aefc",
-  "#99ccff",
 ];
 
 const formConfig = {
@@ -87,7 +63,9 @@ export default function Timesheet() {
   const colorButtonRef = useRef(null);
   const [colorOpen, setColorOpen] = useState(false);
   const menuRef = useRef(null);
-
+  const [colors, setColors] = useState([]);
+  const [selectedWeek, setSelectedWeek] = useState(null); // ← Holds full week object
+  const [loadingTasks, setLoadingTasks] = useState(true);
   const todayStr = new Date().toISOString().split("T")[0];
   const config = formConfig[taskType];
 
@@ -99,7 +77,7 @@ export default function Timesheet() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // === Load Legends ===
+  // === Load Legends & Colors ===
   const loadLegends = async () => {
     try {
       const res = await TaskApi.legends();
@@ -108,48 +86,76 @@ export default function Timesheet() {
       console.error(e);
     }
   };
-
+  const colorApi = async () => {
+    try {
+      const res = await TaskApi.colorPallette();
+      setColors(res.content.map((item) => item.code));
+    } catch (e) {
+      console.error(e);
+    }
+  };
   useEffect(() => {
     loadLegends();
+    colorApi();
   }, []);
 
-  // === Load Week Data ===
+  // === THIS IS THE useEffect YOU WANT TO RUN ON WEEK CHANGE ===
   useEffect(() => {
-    const data = getWeekTasks();
-    let updatedWeek = [...data.week];
+    //console.log("Useffect calling for ", selectedWeek.week)
+    if (!selectedWeek?.week) return;
 
-    if (!updatedWeek.some((d) => d.date === todayStr)) {
-      updatedWeek.push({ date: todayStr, tasks: [] });
-    }
-
-    updatedWeek.sort((a, b) => b.date.localeCompare(a.date));
-    setWeekData({ week: updatedWeek });
-  }, []);
-
-  // === Click Outside for Menu ===
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+    const loadTasks = async () => {
+      // console.log("Useffect calling for ", selectedWeek.startDate,selectedWeek.endDate, )
+      try {
+        // setLoadingTasks(true);
+        // const { content } = await TaskApi.weekTasks(selectedWeek.startDate, selectedWeek.endDate);
+        // const sorted = (content || []).sort((a, b) => b.date.localeCompare(a.date));
+        // if (!sorted.some(d => d.date === todayStr)) {
+        //   sorted.push({ date: todayStr, tasks: [] });
+        // }
+        // setWeekData({ week: sorted });
+        const data = getWeekTasks();
+        let updated = [...data.week];
+        if (!updated.some((d) => d.date === todayStr))
+          updated.push({ date: todayStr, tasks: [] });
+        updated.sort((a, b) => b.date.localeCompare(a.date));
+        setWeekData({ week: updated });
+      } catch (e) {
+        console.error("Failed to load tasks for week:", selectedWeek.week, e);
+        // Optional: fallback to mock
+        const data = getWeekTasks();
+        let updated = [...data.week];
+        if (!updated.some((d) => d.date === todayStr))
+          updated.push({ date: todayStr, tasks: [] });
+        updated.sort((a, b) => b.date.localeCompare(a.date));
+        setWeekData({ week: updated });
+      } finally {
+        setLoadingTasks(false);
       }
     };
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+
+    loadTasks();
+  }, [selectedWeek?.week]); // ← Triggers every time week number changes
+
+  // === Click Outside Handlers ===
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setMenuOpen(false);
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  // === Click Outside for Color Dropdown ===
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (e) => {
       if (
         colorDropdownRef.current &&
-        !colorDropdownRef.current.contains(event.target) &&
+        !colorDropdownRef.current.contains(e.target) &&
         colorButtonRef.current &&
-        !colorButtonRef.current.contains(event.target)
-      ) {
+        !colorButtonRef.current.contains(e.target)
+      )
         setColorOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -163,8 +169,8 @@ export default function Timesheet() {
       minutes: 0,
       ticketId: legend.ticket_id,
       colorCode: legend.color_row,
-      taskType: inferTaskType(legend.task_code),
-      //status: "In Progress",
+      taskType: legend.task_type,
+      status: legend.status,
       updatedDate: new Date().toISOString(),
       dailyAccomplishments: "",
       investigationRCA: "", // Required for issues
@@ -324,33 +330,58 @@ export default function Timesheet() {
 
   return (
     <div>
-      {/* Header + Create Button */}
       <div ref={menuRef}>
         <TimesheetHeader
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           handleMenuSelect={handleMenuSelect}
           isMobile={isMobile}
+          onWeekChange={setSelectedWeek} // ← Pass setter directly
         />
       </div>
 
-      {/* Legends */}
       <LegendsBar legends={legends} onLegendClick={handleLegendClick} />
 
-      {/* Week Days */}
       <div style={{ position: "relative" }}>
-        {weekData.week.map((day) => (
-          <DayCard
-            key={day.date}
-            day={day}
-            isToday={day.date === todayStr}
-            onAddTask={() => setColorDlgOpen(true)}
-            isMobile={isMobile}
-          />
-        ))}
+        {loadingTasks
+          ? Array(5)
+              .fill(0)
+              .map((_, i) => (
+                <Skeleton
+                  key={i}
+                  variant="rectangular"
+                  height={200}
+                  sx={{
+                    mb: 4,
+                    borderRadius: "0.75rem",
+                    background: {
+                      xs: "rgba(255, 255, 255, 0.1)",
+                      md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
+                    },
+                    backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+                    WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+                    border: {
+                      xs: "1px solid rgba(255,255,255,0.1)",
+                      md: "1px solid rgba(255,255,255,0.2)",
+                    },
+                    boxShadow: {
+                      xs: "0 4px 16px rgba(0,0,0,0.1)",
+                      md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
+                    },
+                  }}
+                />
+              ))
+          : weekData.week.map((day) => (
+              <DayCard
+                key={day.date}
+                day={day}
+                isToday={day.date === todayStr}
+                onAddTask={() => setColorDlgOpen(true)}
+                isMobile={isMobile}
+              />
+            ))}
       </div>
 
-      {/* Task Form Dialog */}
       <TaskFormDialog
         open={formOpen}
         config={config}
@@ -358,7 +389,6 @@ export default function Timesheet() {
         errors={errors}
         colors={colors}
         colorOpen={colorOpen}
-        //setColorOpen={setColorOpen}
         colorButtonRef={colorButtonRef}
         colorDropdownRef={colorDropdownRef}
         isMobile={isMobile}
@@ -376,13 +406,12 @@ export default function Timesheet() {
         onCancel={handleCancel}
       />
 
-      {/* Color Picker for Quick Add */}
       <LegendPickerDialog
         open={colorDlgOpen}
         onClose={() => setColorDlgOpen(false)}
         onSelect={handleAddTask}
-        legends={availableLegends} // Only legend colors
-        selectedColor={null} // optional
+        legends={availableLegends}
+        selectedColor={null}
       />
     </div>
   );

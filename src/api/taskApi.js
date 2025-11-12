@@ -97,4 +97,20 @@ export const TaskApi = {
       throw error;
     }
   },
+
+  async weeks(date,value) {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timeSheet/dates/${date}/${value}`,
+         { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching legends details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
 };

@@ -3,14 +3,6 @@ import { Dialog, DialogTitle, DialogContent, IconButton, Box, Typography } from 
 import { X } from "lucide-react";
 import { theme } from "../../theme/theme";
 
-/**
- * Props:
- * - open: boolean
- * - onClose: () => void
- * - onSelect: (color: string) => void
- * - legends: Array<{ code: string, task_id: string }>  ← Required
- * - selectedColor?: string (optional)
- */
 export default function LegendPickerDialog({
   open,
   onClose,

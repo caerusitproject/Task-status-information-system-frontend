@@ -1,9 +1,16 @@
+// TimesheetHeader.jsx
 import { Plus } from "lucide-react";
 import { Box } from "@mui/material";
 import WeekDropdown from "./WeekDropdown";
 import { theme } from "../../theme/theme";
 
-export default function TimesheetHeader({ menuOpen, setMenuOpen, handleMenuSelect, isMobile }) {
+export default function TimesheetHeader({
+  menuOpen,
+  setMenuOpen,
+  handleMenuSelect,
+  isMobile,
+  onWeekChange, // ← Receives setSelectedWeek from parent
+}) {
   return (
     <div
       style={{
@@ -17,7 +24,8 @@ export default function TimesheetHeader({ menuOpen, setMenuOpen, handleMenuSelec
         gap: theme.spacing.md,
       }}
     >
-      <WeekDropdown />
+      <WeekDropdown onWeekChange={onWeekChange} />
+
       <Box
         sx={{
           display: "flex",
@@ -36,16 +44,18 @@ export default function TimesheetHeader({ menuOpen, setMenuOpen, handleMenuSelec
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
-            padding: "0.75rem 2rem",
+            padding: isMobile ? "0.75rem 1rem" : "0.75rem 2rem",
             backgroundColor: theme.colors.primary,
             color: theme.colors.white,
             border: "none",
             borderRadius: "0.5rem",
-            fontSize: "1rem",
+            fontSize: isMobile ? "0.875rem" : "1rem",
             fontWeight: 600,
             cursor: "pointer",
             boxShadow: theme.shadows.small,
             transition: theme.transitions.fast,
+            whiteSpace: "nowrap",
+            minWidth: "fit-content",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = theme.colors.primaryDark;
@@ -93,12 +103,8 @@ export default function TimesheetHeader({ menuOpen, setMenuOpen, handleMenuSelec
                   fontSize: "1rem",
                   transition: "background-color 0.2s ease",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = theme.colors.lightGray)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.colors.lightGray)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 {item}
               </button>

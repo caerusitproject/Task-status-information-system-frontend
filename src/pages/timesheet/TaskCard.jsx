@@ -22,6 +22,7 @@ export default function TaskCard({ task: initialTask }) {
 
   const isIssue = taskType.toLowerCase() === "issue";
   const showResolution = isIssue && status === "Resolved";
+  //const showC = // if its not ewua
   const textAreaRows = 4;
 
   const updateField = (field, value) => {
@@ -121,12 +122,10 @@ export default function TaskCard({ task: initialTask }) {
               placeholder="Describe the investigation findings and the root cause of the issue..."
             />
 
-            
-
             {/* Show Resolution ONLY if status === "Resolved" */}
             {showResolution && (
               <>
-              <Box sx={{ borderTop: "1px solid rgba(0,0,0,0.7)", my: 1.5 }} />
+                <Box sx={{ borderTop: "1px solid rgba(0,0,0,0.7)", my: 1.5 }} />
                 <Typography
                   sx={{ fontWeight: 600, fontSize: "0.875rem", mb: 0.5 }}
                 >
@@ -184,17 +183,17 @@ export default function TaskCard({ task: initialTask }) {
           bgcolor: "#3a3a3a",
           color: "#fff",
           width: { xs: "100%", md: "200px" },
-          minHeight: { xs: "140px", md: "auto" },
+          minHeight: { xs: "160px", md: "auto" },
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          p: 1,
-          pt: 1.5,
+          justifyContent: "space-between", // push bottom section to bottom
+          p: 1.5,
         }}
       >
-        {/* HH:MM */}
-        <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
+        {/* HH:MM Section */}
+        <Box
+          sx={{ display: "flex", gap: 0.5, justifyContent: "center", mt: 0.5 }}
+        >
           <InputBase
             value={hours ?? ""}
             placeholder="HH"
@@ -249,21 +248,23 @@ export default function TaskCard({ task: initialTask }) {
           />
         </Box>
 
-        {/* TICKET + SR CHIP + U/R/C — Pushed to bottom */}
+        {/* SR + Ticket + URC Buttons */}
         <Box
           sx={{
-            mt: "auto",
+            mt: 2,
             width: "100%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 1.5,
+            flexGrow: 1,
+            justifyContent: "flex-end", // keep bottom-aligned
+            gap: 0.5,
           }}
         >
-          {/* SR Number Chip – ONLY for Issues & if srNo exists */}
-          {isIssue && task.srNo && (
+          {/* SR Number Chip */}
+          {isIssue && task.sr_no && (
             <Chip
-              label={`SR: ${task.srNo}`}
+              label={`SR: ${task.sr_no}`}
               sx={{
                 bgcolor: "#1a1a1a",
                 color: "#fff",
@@ -280,48 +281,35 @@ export default function TaskCard({ task: initialTask }) {
             />
           )}
 
-          {/* Ticket ID Chip */}
-          {ticketId && (
-            <Chip
-              label={ticketId}
+          {/* Ticket + U/R/C Group */}
+          
+            <Box
               sx={{
-                bgcolor: "#000",
-                color: "#fff",
-                px: 1.5,
-                py: 0.5,
-                borderRadius: "999px",
-                fontSize: "0.75rem",
-                maxWidth: "100%",
-                width: "fit-content",
-                mx: "auto",
-              }}
-            />
-          )}
-
-          {/* U/R/C Buttons */}
-          <Box sx={{ display: "flex", gap: 4 }}>
-            <IconButton
-              size="small"
-              sx={{
-                bgcolor: colorCode,
-                color: "#000",
-                width: 36,
-                height: 36,
-                fontSize: "0.875rem",
-                fontWeight: "bold",
-                borderRadius: 1,
-                transition: "all 0.2s",
-                "&:hover": {
-                  bgcolor: "#fff",
-                  color: "#000",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                },
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 0.6, // keep Ticket and Buttons close
               }}
             >
-              U
-            </IconButton>
-            {ticketId && (
-              <>
+              {ticketId && (
+                <Chip
+                  label={ticketId}
+                  sx={{
+                    bgcolor: "#000",
+                    color: "#fff",
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: "999px",
+                    fontSize: "0.75rem",
+                    maxWidth: "100%",
+                    width: "fit-content",
+                    mx: "auto",
+                  }}
+                />
+              )}
+
+              <Box sx={{ display: "flex", gap: 3, mt: 0.2 }}>
+                {/* U */}
                 <IconButton
                   size="small"
                   sx={{
@@ -340,31 +328,59 @@ export default function TaskCard({ task: initialTask }) {
                     },
                   }}
                 >
-                  R
+                  U
                 </IconButton>
-                <IconButton
-                  size="small"
-                  sx={{
-                    bgcolor: colorCode,
-                    color: "#000",
-                    width: 36,
-                    height: 36,
-                    fontSize: "0.875rem",
-                    fontWeight: "bold",
-                    borderRadius: 1,
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      bgcolor: "#fff",
+
+                {/* R */}
+                {ticketId && isIssue && (
+                  <IconButton
+                    size="small"
+                    sx={{
+                      bgcolor: colorCode,
                       color: "#000",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                    },
-                  }}
-                >
-                  C
-                </IconButton>
-              </>
-            )}
-          </Box>
+                      width: 36,
+                      height: 36,
+                      fontSize: "0.875rem",
+                      fontWeight: "bold",
+                      borderRadius: 1,
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "#fff",
+                        color: "#000",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                      },
+                    }}
+                  >
+                    R
+                  </IconButton>
+                )}
+
+                {/* C */}
+                {ticketId &&
+                  (!isIssue || ["Resolved", "Completed"].includes(status)) && (
+                    <IconButton
+                      size="small"
+                      sx={{
+                        bgcolor: colorCode,
+                        color: "#000",
+                        width: 36,
+                        height: 36,
+                        fontSize: "0.875rem",
+                        fontWeight: "bold",
+                        borderRadius: 1,
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          bgcolor: "#fff",
+                          color: "#000",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        },
+                      }}
+                    >
+                      C
+                    </IconButton>
+                  )}
+              </Box>
+            </Box>
         </Box>
       </Box>
     </Box>
