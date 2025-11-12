@@ -165,8 +165,8 @@ export default function Timesheet() {
   const handleAddTask = (legend) => {
     const newTask = {
       taskId: legend.task_code,
-      hours: 0,
-      minutes: 0,
+      // hours: 0,
+      // minutes: 0,
       ticketId: legend.ticket_id,
       colorCode: legend.color_row,
       taskType: legend.task_type,

@@ -59,7 +59,7 @@ export default function TaskCard({ task: initialTask }) {
           p: 1,
         }}
       >
-        {ticketId && (
+        {ticketId && taskType !== "ticket_less" && (
           <>
             <Typography
               variant="caption"
@@ -282,34 +282,57 @@ export default function TaskCard({ task: initialTask }) {
           )}
 
           {/* Ticket + U/R/C Group */}
-          
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 0.6, // keep Ticket and Buttons close
-              }}
-            >
-              {ticketId && (
-                <Chip
-                  label={ticketId}
-                  sx={{
-                    bgcolor: "#000",
-                    color: "#fff",
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: "999px",
-                    fontSize: "0.75rem",
-                    maxWidth: "100%",
-                    width: "fit-content",
-                    mx: "auto",
-                  }}
-                />
-              )}
 
-              <Box sx={{ display: "flex", gap: 3, mt: 0.2 }}>
-                {/* U */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 0.6, // keep Ticket and Buttons close
+            }}
+          >
+            {ticketId && taskType !== "ticket_less" && (
+              <Chip
+                label={ticketId}
+                sx={{
+                  bgcolor: "#000",
+                  color: "#fff",
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: "999px",
+                  fontSize: "0.75rem",
+                  maxWidth: "100%",
+                  width: "fit-content",
+                  mx: "auto",
+                }}
+              />
+            )}
+
+            <Box sx={{ display: "flex", gap: 3, mt: 0.2 }}>
+              {/* U */}
+              <IconButton
+                size="small"
+                sx={{
+                  bgcolor: colorCode,
+                  color: "#000",
+                  width: 36,
+                  height: 36,
+                  fontSize: "0.875rem",
+                  fontWeight: "bold",
+                  borderRadius: 1,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: "#fff",
+                    color: "#000",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                  },
+                }}
+              >
+                U
+              </IconButton>
+
+              {/* R */}
+              {ticketId && isIssue && (
                 <IconButton
                   size="small"
                   sx={{
@@ -328,11 +351,14 @@ export default function TaskCard({ task: initialTask }) {
                     },
                   }}
                 >
-                  U
+                  R
                 </IconButton>
+              )}
 
-                {/* R */}
-                {ticketId && isIssue && (
+              {/* C */}
+              {ticketId &&
+                taskType !== "ticket_less" &&
+                (!isIssue || ["Resolved", "Completed"].includes(status)) && (
                   <IconButton
                     size="small"
                     sx={{
@@ -351,36 +377,11 @@ export default function TaskCard({ task: initialTask }) {
                       },
                     }}
                   >
-                    R
+                    C
                   </IconButton>
                 )}
-
-                {/* C */}
-                {ticketId &&
-                  (!isIssue || ["Resolved", "Completed"].includes(status)) && (
-                    <IconButton
-                      size="small"
-                      sx={{
-                        bgcolor: colorCode,
-                        color: "#000",
-                        width: 36,
-                        height: 36,
-                        fontSize: "0.875rem",
-                        fontWeight: "bold",
-                        borderRadius: 1,
-                        transition: "all 0.2s",
-                        "&:hover": {
-                          bgcolor: "#fff",
-                          color: "#000",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                        },
-                      }}
-                    >
-                      C
-                    </IconButton>
-                  )}
-              </Box>
             </Box>
+          </Box>
         </Box>
       </Box>
     </Box>

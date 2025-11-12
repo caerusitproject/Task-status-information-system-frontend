@@ -1,5 +1,12 @@
 // src/components/LegendPickerDialog.jsx
-import { Dialog, DialogTitle, DialogContent, IconButton, Box, Typography } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Box,
+  Typography,
+} from "@mui/material";
 import { X } from "lucide-react";
 import { theme } from "../../theme/theme";
 
@@ -13,14 +20,31 @@ export default function LegendPickerDialog({
   // Empty state
   if (legends.length === 0) {
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="xs" PaperProps={{ sx: { width: 320, height: 240 } }}>
-        <DialogTitle sx={{ bgcolor: "#222", color: "#fff", fontSize: "1rem", pb: 2 }}>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="xs"
+        PaperProps={{ sx: { width: 320, height: 240 } }}
+      >
+        <DialogTitle
+          sx={{ bgcolor: "#222", color: "#fff", fontSize: "1rem", pb: 2 }}
+        >
           Choose active task
-          <IconButton onClick={onClose} sx={{ color: "#aaa", position: "absolute", right: 8, top: 8 }}>
+          <IconButton
+            onClick={onClose}
+            sx={{ color: "#aaa", position: "absolute", right: 8, top: 8 }}
+          >
             <X size={20} />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
+        <DialogContent
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 3,
+          }}
+        >
           <Typography color="#aaa">No active tasks available.</Typography>
         </DialogContent>
       </Dialog>
@@ -112,8 +136,13 @@ export default function LegendPickerDialog({
             mt: 1,
           }}
         >
-          {legends.map((legend) => {
-            const { color_row: code, task_code: task_id } = legend;
+          {[
+            // First, normal legends
+            ...legends.filter((legend) => legend.task_type !== "ticket_less"),
+            // Then, ticket_less ones
+            ...legends.filter((legend) => legend.task_type === "ticket_less"),
+          ].map((legend) => {
+            const { color_row: code, task_code: task_id, task_type } = legend;
             const isSelected = selectedColor === code;
 
             return (
@@ -130,7 +159,9 @@ export default function LegendPickerDialog({
                   bgcolor: code,
                   borderRadius: 2.5,
                   cursor: "pointer",
-                  border: isSelected ? "3px solid #fff" : "2px solid transparent",
+                  border: isSelected
+                    ? "3px solid #fff"
+                    : "2px solid transparent",
                   boxShadow: isSelected
                     ? "0 0 0 2px #000, 0 0 14px rgba(255,255,255,0.4)"
                     : "0 3px 8px rgba(0,0,0,0.25)",
@@ -142,22 +173,24 @@ export default function LegendPickerDialog({
                   },
                 }}
               >
-                <Typography
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                    fontWeight: 700,
-                    color: "#000",
-                    textShadow: "0 0 3px rgba(255,255,255,0.5)",
-                    pointerEvents: "none",
-                  }}
-                >
-                  {task_id}
-                </Typography>
+                {legend.task_type !== "ticket_less" && (
+                  <Typography
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                      fontWeight: 700,
+                      color: "#000",
+                      textShadow: "0 0 3px rgba(255,255,255,0.5)",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {task_id}
+                  </Typography>
+                )}
               </Box>
             );
           })}

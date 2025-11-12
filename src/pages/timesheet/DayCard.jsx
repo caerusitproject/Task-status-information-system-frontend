@@ -44,8 +44,9 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
           justifyContent: { xs: "space-between", md: "space-between" },
           alignItems: "center",
           padding: { xs: "0.75rem 1rem", md: "1rem 0" },
-          paddingTop: { md: "4rem" },
+          paddingTop: { md: "2rem" },
           backgroundColor: { xs: "rgba(0,0,0,0.04)", md: "transparent" },
+          //marginBottom:  { md: "12rem" },
         }}
       >
         <Typography
@@ -74,12 +75,15 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
           <IconButton
             onClick={onAddTask}
             sx={{
-              width: { xs: 36, md: 40 },
-              height: { xs: 36, md: 40 },
+              width: { xs: 38, md: 40 }, // wider for rectangular shape
+              height: { xs: 36, md: 40 }, // shorter height
               bgcolor: theme.colors.primary,
               color: "#fff",
+              borderRadius: "0.5rem", // 👈 makes it rectangular (less rounded)
               "&:hover": { bgcolor: theme.colors.primaryDark },
               flexShrink: 0,
+              marginBottom:  { md: "0.5rem" },
+              marginLeft : { md: "0.5rem" },
             }}
           >
             <Plus size={24} />
@@ -88,7 +92,7 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
       </Box>
 
       {/* Tasks */}
-      <Box sx={{ minHeight: 180,  }}>
+      <Box sx={{ minHeight: 180 }}>
         {day.tasks.length === 0 ? (
           <Box
             sx={{

@@ -21,10 +21,17 @@ export default function TimesheetHeader({
         width: "100%",
         flexWrap: isMobile ? "wrap" : "nowrap",
         flexDirection: isMobile ? "column" : "row",
-        gap: theme.spacing.md,
+        gap: isMobile ? theme.spacing.xs : theme.spacing.md,
       }}
     >
-      <WeekDropdown onWeekChange={onWeekChange} />
+      <div
+        style={{
+          alignSelf: isMobile ? "flex-start" : "center",
+          width: isMobile ? "100%" : "auto",
+        }}
+      >
+        <WeekDropdown onWeekChange={onWeekChange} />
+      </div>
 
       <Box
         sx={{
@@ -90,7 +97,11 @@ export default function TimesheetHeader({
             {["New Assignment", "Issue", "Change Request"].map((item, idx) => (
               <button
                 key={idx}
-                onClick={() => handleMenuSelect(["assignment", "issue", "change_request"][idx])}
+                onClick={() =>
+                  handleMenuSelect(
+                    ["assignment", "issue", "change_request"][idx]
+                  )
+                }
                 style={{
                   width: "100%",
                   textAlign: "left",
@@ -103,8 +114,13 @@ export default function TimesheetHeader({
                   fontSize: "1rem",
                   transition: "background-color 0.2s ease",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.colors.lightGray)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    theme.colors.lightGray)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
               >
                 {item}
               </button>
