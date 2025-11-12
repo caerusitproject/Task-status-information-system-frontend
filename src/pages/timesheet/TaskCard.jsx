@@ -14,6 +14,7 @@ export default function TaskCard({ task: initialTask }) {
     taskType,
     status,
     ticketId,
+    sr_no,
     hours,
     minutes,
     dailyAccomplishments,
@@ -33,7 +34,7 @@ export default function TaskCard({ task: initialTask }) {
   };
 
   const ticketDisplayValue = ticketId ? `Ticket : ${ticketId}` : "";
- const showFooter =["Resolved", "Completed", "Updated"].includes(status);
+  const showFooter = ["Resolved", "Completed", "Updated"].includes(status);
 
   const showFooterUnderInvestigation =
     isIssue && status === "Resolved" && !!updatedDate;
@@ -221,7 +222,7 @@ export default function TaskCard({ task: initialTask }) {
               }}
               placeholder="Summarize key accomplishments and progress for this task..."
             />
-            {updatedDate && showFooter &&(
+            {updatedDate && showFooter && (
               <Box
                 sx={{
                   mt: 1,
@@ -425,7 +426,8 @@ export default function TaskCard({ task: initialTask }) {
               {/* C */}
               {ticketId &&
                 taskType !== "ticket_less" &&
-                (!isIssue || ["Resolved", "Completed"].includes(status)) && (
+                (!isIssue || ["Resolved", "Completed"].includes(status)) &&
+                !(isIssue && task.sr_no?.trim()) && (
                   <IconButton
                     size="small"
                     sx={{

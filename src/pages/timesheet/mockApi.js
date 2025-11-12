@@ -150,7 +150,7 @@ export const getWeekTasks = () => ({
           sr_no: "V-12",
           colorCode: "#ff9c68",
           taskType: "Issue",
-          status: "In Progress",
+          status: "Resolved",
           updatedDate: "2025-11-05T15:30:00Z",
           investigationRCA: "Database queries causing timeout. Index missing on user table.",
           resolutions: "Added proper index to database. Monitored queries for stability."
