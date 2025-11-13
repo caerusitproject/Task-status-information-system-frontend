@@ -7,17 +7,18 @@ import { TaskApi } from "../../api/taskApi";
 export default function WeekDropdown({ onWeekChange }) {
   const [weekDropdownOpen, setWeekDropdownOpen] = useState(false);
   const [weeks, setWeeks] = useState([]);
-  const isMobile = window.innerWidth <= 768;
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedWeekId, setSelectedWeekId] = useState(null); // Track by ID
   const [apiValue, setApiValue] = useState(1);
   const [loading, setLoading] = useState(true);
   const weekDropdownRef = useRef(null);
+  const isMobile = window.innerWidth <= 768;
 
   const formatDate = (dateStr) => {
     const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year.slice(-2)}`;
   };
 
+  // Fetch weeks when apiValue changes
   useEffect(() => {
     const fetchWeeks = async () => {
       try {
@@ -27,21 +28,37 @@ export default function WeekDropdown({ onWeekChange }) {
         const weekList = response.content || [];
         weekList.sort((a, b) => a.week - b.week);
         setWeeks(weekList);
+
         if (weekList.length > 0) {
-          setSelectedIndex(0);
-          onWeekChange(weekList[0]); // ← Sends full week object
-          //console.log("Weeks in week",weekList[0])
+          let weekToSelect = weekList[0];
+
+          // If we had a previously selected week ID, try to keep it
+          if (selectedWeekId !== null) {
+            const matchingWeek = weekList.find(w => w.week === selectedWeekId);
+            if (matchingWeek) {
+              weekToSelect = matchingWeek;
+            }
+          }
+
+          setSelectedWeekId(weekToSelect.week);
+          onWeekChange(weekToSelect);
+        } else {
+          setSelectedWeekId(null);
+          onWeekChange(null);
         }
       } catch (error) {
         console.error("Failed to load weeks:", error);
         setWeeks([]);
+        setSelectedWeekId(null);
       } finally {
         setLoading(false);
       }
     };
-    fetchWeeks();
-  }, [apiValue, onWeekChange]);
 
+    fetchWeeks();
+  }, [apiValue]);
+
+  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (weekDropdownRef.current && !weekDropdownRef.current.contains(event.target)) {
@@ -52,11 +69,14 @@ export default function WeekDropdown({ onWeekChange }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (index) => {
-    setSelectedIndex(index);
+  const handleSelect = (week) => {
+    setSelectedWeekId(week.week);
     setWeekDropdownOpen(false);
-    onWeekChange(weeks[index]); // ← Sends selected week
+    onWeekChange(week);
   };
+
+  const handlePrev = () => setApiValue(prev => prev - 1);
+  const handleNext = () => setApiValue(prev => prev + 1);
 
   if (loading) {
     return (
@@ -74,7 +94,7 @@ export default function WeekDropdown({ onWeekChange }) {
     );
   }
 
-  const selectedWeek = weeks[selectedIndex];
+  const selectedWeek = weeks.find(w => w.week === selectedWeekId) || weeks[0];
 
   return (
     <div
@@ -89,7 +109,7 @@ export default function WeekDropdown({ onWeekChange }) {
       }}
     >
       <button
-        onClick={() => setApiValue(prev => prev - 1)}
+        onClick={handlePrev}
         style={{
           padding: "0.5rem 0.75rem",
           backgroundColor: theme.colors.surface,
@@ -99,7 +119,6 @@ export default function WeekDropdown({ onWeekChange }) {
           cursor: "pointer",
           fontSize: "1rem",
           fontWeight: 600,
-          opacity: 1,
           transition: theme.transitions.fast,
         }}
         onMouseEnter={(e) => {
@@ -111,7 +130,7 @@ export default function WeekDropdown({ onWeekChange }) {
           e.currentTarget.style.borderColor = theme.colors.lightGray;
         }}
       >
-         &lt;
+        &lt;
       </button>
 
       <div ref={weekDropdownRef} style={{ position: "relative", flex: 1 }}>
@@ -171,17 +190,17 @@ export default function WeekDropdown({ onWeekChange }) {
               border: `1px solid ${theme.colors.lightGray}`,
             }}
           >
-            {weeks.map((week, index) => (
+            {weeks.map((week) => (
               <button
                 key={week.week}
-                onClick={() => handleSelect(index)}
+                onClick={() => handleSelect(week)}
                 style={{
                   width: "100%",
                   textAlign: "left",
                   padding: "0.75rem 1rem",
-                  backgroundColor: selectedIndex === index ? theme.colors.lightGray : "transparent",
+                  backgroundColor: week.week === selectedWeekId ? theme.colors.lightGray : "transparent",
                   border: "none",
-                  fontWeight: selectedIndex === index ? 600 : 500,
+                  fontWeight: week.week === selectedWeekId ? 600 : 500,
                   color: theme.colors.text.primary,
                   cursor: "pointer",
                   fontSize: "0.875rem",
@@ -189,7 +208,7 @@ export default function WeekDropdown({ onWeekChange }) {
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.colors.lightGray)}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = selectedIndex === index ? theme.colors.lightGray : "transparent";
+                  e.currentTarget.style.backgroundColor = week.week === selectedWeekId ? theme.colors.lightGray : "transparent";
                 }}
               >
                 {formatDate(week.startDate)} - {formatDate(week.endDate)}
@@ -200,7 +219,7 @@ export default function WeekDropdown({ onWeekChange }) {
       </div>
 
       <button
-        onClick={() => setApiValue(prev => prev + 1)}
+        onClick={handleNext}
         style={{
           padding: "0.5rem 0.75rem",
           backgroundColor: theme.colors.surface,
@@ -210,7 +229,6 @@ export default function WeekDropdown({ onWeekChange }) {
           cursor: "pointer",
           fontSize: "1rem",
           fontWeight: 600,
-          opacity: 1,
           transition: theme.transitions.fast,
         }}
         onMouseEnter={(e) => {
@@ -222,7 +240,7 @@ export default function WeekDropdown({ onWeekChange }) {
           e.currentTarget.style.borderColor = theme.colors.lightGray;
         }}
       >
-         &gt;
+        &gt;
       </button>
     </div>
   );

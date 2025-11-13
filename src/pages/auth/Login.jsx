@@ -31,7 +31,7 @@ const Login = () => {
   useEffect(() => {
   if (isAuthenticated && user) {
     const isAdmin = user?.roles?.includes("ADMIN") || user?.role === "ADMIN";
-    navigate(isAdmin ? "/report" : "/task-management", { replace: true });
+    navigate(isAdmin ? "/report" : "/timesheet", { replace: true });
   }
 }, [isAuthenticated, user, navigate]);
 

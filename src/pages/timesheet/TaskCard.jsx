@@ -6,7 +6,7 @@ import { theme } from "../../theme/theme";
 
 export default function TaskCard({ task: initialTask }) {
   const [task, setTask] = useState(initialTask);
-  console.log("Tasks", task);
+  //console.log("Tasks", task);
 
   const {
     taskId,
@@ -24,7 +24,7 @@ export default function TaskCard({ task: initialTask }) {
   } = task;
 
   const isIssue = taskType.toLowerCase() === "issue";
-  const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
+  const showResolution = isIssue && ["Resolved", "Completed" ,].includes(status);
 
   //const showC = // if its not ewua
   const textAreaRows = 4;
@@ -37,7 +37,8 @@ export default function TaskCard({ task: initialTask }) {
   const showFooter = ["Resolved", "Completed", "Updated"].includes(status);
 
   const showFooterUnderInvestigation =
-    isIssue && status === "Resolved" && !!updatedDate;
+  isIssue && ["Resolved", "Updated"].includes(status) && !!updatedDate;
+
 
   const showFooterUnderResolution =
     isIssue && status === "Completed" && !!updatedDate;
@@ -148,6 +149,7 @@ export default function TaskCard({ task: initialTask }) {
                   minute: "2-digit",
                   month: "short",
                   day: "numeric",
+                  hour12: true, // ensures AM/PM format
                 })}
               </Box>
             )}
@@ -193,6 +195,7 @@ export default function TaskCard({ task: initialTask }) {
                       minute: "2-digit",
                       month: "short",
                       day: "numeric",
+                      hour12: true, // ensures AM/PM format
                     })}
                   </Box>
                 )}
@@ -238,6 +241,7 @@ export default function TaskCard({ task: initialTask }) {
                   minute: "2-digit",
                   month: "short",
                   day: "numeric",
+                  hour12: true, // ensures AM/PM format
                 })}
               </Box>
             )}

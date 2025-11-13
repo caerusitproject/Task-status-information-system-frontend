@@ -2,8 +2,15 @@ import { Box, Typography, IconButton } from "@mui/material";
 import { Plus } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { theme } from "../../theme/theme";
+import { useEffect } from "react";
 
-export default function DayCard({ day, isToday, onAddTask, isMobile }) {
+export default function DayCard({
+  day,
+  isToday,
+  onAddTask,
+  isMobile,
+  showToday,
+}) {
   return (
     <Box
       key={day.date}
@@ -71,7 +78,7 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
             .toUpperCase()}
         </Typography>
 
-        {isToday && (
+        {isToday && showToday && (
           <IconButton
             onClick={onAddTask}
             sx={{
@@ -82,8 +89,8 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
               borderRadius: "0.5rem", // 👈 makes it rectangular (less rounded)
               "&:hover": { bgcolor: theme.colors.primaryDark },
               flexShrink: 0,
-              marginBottom:  { md: "0.5rem" },
-              marginLeft : { md: "0.5rem" },
+              marginBottom: { md: "0.5rem" },
+              marginLeft: { md: "0.5rem" },
             }}
           >
             <Plus size={24} />
@@ -92,22 +99,27 @@ export default function DayCard({ day, isToday, onAddTask, isMobile }) {
       </Box>
 
       {/* Tasks */}
+      {/* Tasks */}
       <Box sx={{ minHeight: 180 }}>
         {day.tasks.length === 0 ? (
-          <Box
-            sx={{
-              minHeight: 180,
-              border: "0.0625rem dashed #d0d0d0",
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#777",
-              fontStyle: "italic",
-            }}
-          >
-            Please add today’s task
-          </Box>
+          isToday && showToday ? (
+            <Box
+              sx={{
+                minHeight: 180,
+                border: "0.0625rem dashed #d0d0d0",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#777",
+                fontStyle: "italic",
+              }}
+            >
+              Please add today’s task
+            </Box>
+          ) : (
+            <></>
+          )
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {day.tasks.map((task, index) => (

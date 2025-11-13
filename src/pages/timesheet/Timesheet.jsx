@@ -67,7 +67,10 @@ export default function Timesheet() {
   const [selectedWeek, setSelectedWeek] = useState(null); // ← Holds full week object
   const [loadingTasks, setLoadingTasks] = useState(true);
   const todayStr = new Date().toISOString().split("T")[0];
+  const [todayIsInSelectedWeek, setTodayIsInSelectedWeek] = useState(false);
   const config = formConfig[taskType];
+  // Add this inside Timesheet() before return
+  const today = new Date().toISOString().split("T")[0]; // already have todayStr
 
   // === Mobile Detection ===
   useEffect(() => {
@@ -101,34 +104,42 @@ export default function Timesheet() {
 
   // === THIS IS THE useEffect YOU WANT TO RUN ON WEEK CHANGE ===
   useEffect(() => {
-    //console.log("Useffect calling for ", selectedWeek.week)
     if (!selectedWeek?.week) return;
 
     const loadTasks = async () => {
-      // console.log("Useffect calling for ", selectedWeek.startDate,selectedWeek.endDate, )
       try {
-        // setLoadingTasks(true);
-        // const { content } = await TaskApi.weekTasks(selectedWeek.startDate, selectedWeek.endDate);
-        // const sorted = (content || []).sort((a, b) => b.date.localeCompare(a.date));
-        // if (!sorted.some(d => d.date === todayStr)) {
-        //   sorted.push({ date: todayStr, tasks: [] });
-        // }
-        // setWeekData({ week: sorted });
-        const data = getWeekTasks();
-        let updated = [...data.week];
-        if (!updated.some((d) => d.date === todayStr))
-          updated.push({ date: todayStr, tasks: [] });
-        updated.sort((a, b) => b.date.localeCompare(a.date));
-        setWeekData({ week: updated });
+        setLoadingTasks(true);
+        const { week } = await TaskApi.weekTasks(
+          selectedWeek.startDate,
+          selectedWeek.endDate
+        );
+
+        let days = week || [];
+
+        // Only include today if it's in the selected week
+        const today = new Date().toISOString().split("T")[0];
+        const todayInWeek =
+          selectedWeek.startDate <= today && today <= selectedWeek.endDate;
+
+        if (todayInWeek && !days.some((d) => d.date === today)) {
+          days.push({ date: today, tasks: [] });
+        }
+
+        // Sort newest first
+        days.sort((a, b) => b.date.localeCompare(a.date));
+
+        setWeekData({ week: days });
+        setTodayIsInSelectedWeek(todayInWeek);
       } catch (e) {
-        console.error("Failed to load tasks for week:", selectedWeek.week, e);
-        // Optional: fallback to mock
+        console.error("Failed to load tasks:", e);
+        // Fallback to mock data (optional)
         const data = getWeekTasks();
-        let updated = [...data.week];
-        if (!updated.some((d) => d.date === todayStr))
-          updated.push({ date: todayStr, tasks: [] });
-        updated.sort((a, b) => b.date.localeCompare(a.date));
-        setWeekData({ week: updated });
+        const days = (data.week || []).filter(
+          (d) =>
+            selectedWeek.startDate <= d.date && d.date <= selectedWeek.endDate
+        );
+        setWeekData({ week: days });
+        setTodayIsInSelectedWeek(false);
       } finally {
         setLoadingTasks(false);
       }
@@ -343,43 +354,63 @@ export default function Timesheet() {
       <LegendsBar legends={legends} onLegendClick={handleLegendClick} />
 
       <div style={{ position: "relative" }}>
-        {loadingTasks
-          ? Array(5)
-              .fill(0)
-              .map((_, i) => (
-                <Skeleton
-                  key={i}
-                  variant="rectangular"
-                  height={200}
-                  sx={{
-                    mb: 4,
-                    borderRadius: "0.75rem",
-                    background: {
-                      xs: "rgba(255, 255, 255, 0.1)",
-                      md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
-                    },
-                    backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
-                    WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
-                    border: {
-                      xs: "1px solid rgba(255,255,255,0.1)",
-                      md: "1px solid rgba(255,255,255,0.2)",
-                    },
-                    boxShadow: {
-                      xs: "0 4px 16px rgba(0,0,0,0.1)",
-                      md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
-                    },
-                  }}
-                />
-              ))
-          : weekData.week.map((day) => (
-              <DayCard
-                key={day.date}
-                day={day}
-                isToday={day.date === todayStr}
-                onAddTask={() => setColorDlgOpen(true)}
-                isMobile={isMobile}
+        {loadingTasks ? (
+          Array(5)
+            .fill(0)
+            .map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="rectangular"
+                height={200}
+                sx={{
+                  mb: 4,
+                  borderRadius: "0.75rem",
+                  background: {
+                    xs: "rgba(255, 255, 255, 0.1)",
+                    md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
+                  },
+                  backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+                  WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+                  border: {
+                    xs: "1px solid rgba(255,255,255,0.1)",
+                    md: "1px solid rgba(255,255,255,0.2)",
+                  },
+                  boxShadow: {
+                    xs: "0 4px 16px rgba(0,0,0,0.1)",
+                    md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
+                  },
+                }}
               />
-            ))}
+            ))
+        ) : weekData.week.length > 0 ? (
+          weekData.week.map((day) => (
+            <DayCard
+              key={day.date}
+              day={day}
+              isToday={day.date === todayStr}
+              onAddTask={() => setColorDlgOpen(true)}
+              isMobile={isMobile}
+              showToday={todayIsInSelectedWeek}
+            />
+          ))
+        ) : (
+          // ← NEW: No records message
+          <Box
+            sx={{
+              minHeight: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#aaa",
+              fontStyle: "italic",
+              fontSize: "1.1rem",
+              textAlign: "center",
+              p: 4,
+            }}
+          >
+            No records present
+          </Box>
+        )}
       </div>
 
       <TaskFormDialog

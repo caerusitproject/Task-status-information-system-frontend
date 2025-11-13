@@ -31,7 +31,7 @@ const AppRoutes = () => {
                 user?.role === "ADMIN" || user?.roles?.includes("ADMIN") ? (
                   <Navigate to="/report" replace />
                 ) : (
-                  <Navigate to="/task-management" replace />
+                  <Navigate to="/timesheet" replace />
                 )
               ) : (
                 <Login />

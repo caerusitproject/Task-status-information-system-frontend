@@ -52,7 +52,7 @@ export const TaskApi = {
     try {
       const response = await axios.get(
         `${LOCAL_API}/timeSheet/viewbyId/${taskId}`,
-         { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() }
       );
 
       return response.data;
@@ -98,16 +98,51 @@ export const TaskApi = {
     }
   },
 
-  async weeks(date,value) {
+  async weeks(date, value) {
     try {
       const response = await axios.get(
         `${LOCAL_API}/timeSheet/dates/${date}/${value}`,
-         { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() }
       );
       return response.data;
     } catch (error) {
       console.error(
         "Error fetching legends details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
+  async weekTasks(startDate, endDate) {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timeSheet/weekly-summary-view`,
+        {
+          params: { startDate, endDate },
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching legends details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
+
+  async createTask(taskId, data) {
+    try {
+      const response = await axios.post(
+        `${LOCAL_API}/timeSheet/create-task-details/${taskId}`,
+        data,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error creating task:",
         error.response?.data?.message || error.response?.data
       );
       throw error;
