@@ -5,6 +5,7 @@ import { TaskApi } from "../../api/taskApi";
 import TimesheetHeader from "./TimesheetHeader";
 import LegendsBar from "./LegendsBar";
 import DayCard from "./DayCard";
+import { getWeekTasks } from "./mockApi";
 import TaskFormDialog from "./TaskFormDialog";
 import LegendPickerDialog from "./ColorPickerDialog";
 import { theme } from "../../theme/theme";
@@ -165,14 +166,21 @@ export default function Timesheet() {
     const loadTasks = async () => {
       try {
         setLoadingTasks(true);
+
+        let days = [];
+
+        // 🟩 Try fetching data from actual API
         const { week } = await TaskApi.weekTasks(
           selectedWeek.startDate,
           selectedWeek.endDate
         );
+        days = week || [];
 
-        let days = week || [];
+        // 🟨 Fallback to mock data if API fails
+        // const data = getWeekTasks();
+        // days = data.week || [];
 
-        // Only include today if it's in the selected week
+        // ✅ Only include today if it's in the selected week
         const today = new Date().toISOString().split("T")[0];
         const todayInWeek =
           selectedWeek.startDate <= today && today <= selectedWeek.endDate;
@@ -181,14 +189,16 @@ export default function Timesheet() {
           days.push({ date: today, tasks: [] });
         }
 
-        // Sort newest first
+        // ✅ Sort newest first (latest date first)
         days.sort((a, b) => b.date.localeCompare(a.date));
 
+        // ✅ Update state
         setWeekData({ week: days });
+
+        // ✅ Mark if today is in the selected week
         setTodayIsInSelectedWeek(todayInWeek);
       } catch (e) {
-        console.error("Failed to load tasks:", e);
-        // Fallback to mock data (optional)
+        console.error("❌ Failed to load tasks completely:", e);
       } finally {
         setLoadingTasks(false);
       }
