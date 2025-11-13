@@ -17,6 +17,7 @@ export default function LegendsBar({ legends, onLegendClick }) {
         padding: "1rem 1rem",
         boxShadow: theme.shadows.medium,
         marginBottom: "40px",
+        minHeight: "5rem",
       }}
     >
       {/* Accordion Header – Always visible */}

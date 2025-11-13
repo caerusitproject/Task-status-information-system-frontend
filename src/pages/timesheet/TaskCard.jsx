@@ -1,13 +1,15 @@
 // src/components/TaskCard.jsx
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Box, Typography, IconButton, InputBase, Chip } from "@mui/material";
 import TextareaAutosize from "react-textarea-autosize";
 import { theme } from "../../theme/theme";
 
-export default function TaskCard({ task: initialTask }) {
+export default function TaskCard({ task: initialTask, debouncedSave }) {
   const [task, setTask] = useState(initialTask);
   //console.log("Tasks", task);
-
+useEffect(() => {
+    setTask(initialTask);
+  }, [initialTask]);
   const {
     taskId,
     colorCode,
@@ -23,25 +25,34 @@ export default function TaskCard({ task: initialTask }) {
     updatedDate,
   } = task;
 
-  const isIssue = taskType.toLowerCase() === "issue";
-  const showResolution = isIssue && ["Resolved", "Completed" ,].includes(status);
+  const isIssue = taskType === "issue";
+  const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
 
   //const showC = // if its not ewua
   const textAreaRows = 4;
 
-  const updateField = (field, value) => {
-    setTask((prev) => ({ ...prev, [field]: value }));
-  };
+  
 
   const ticketDisplayValue = ticketId ? `Ticket : ${ticketId}` : "";
   const showFooter = ["Resolved", "Completed", "Updated"].includes(status);
 
   const showFooterUnderInvestigation =
-  isIssue && ["Resolved", "Updated"].includes(status) && !!updatedDate;
-
+    isIssue && ["Resolved", "Updated"].includes(status) && !!updatedDate;
 
   const showFooterUnderResolution =
     isIssue && status === "Completed" && !!updatedDate;
+
+  const handleFieldChange = (field, value) => {
+    const updated = { ...task, [field]: value };
+    setTask(updated);
+    debouncedSave(task.taskId, updated); // Pass camelCase updated
+  };
+
+  const handleStatus = (status) => {
+    const updated = { ...task, status };
+    setTask(updated);
+    debouncedSave(task.taskId, updated); // Pass camelCase updated
+  };
 
   return (
     <Box
@@ -119,7 +130,7 @@ export default function TaskCard({ task: initialTask }) {
             </Typography>
             <TextareaAutosize
               value={investigationRCA || ""}
-              onChange={(e) => updateField("investigationRCA", e.target.value)}
+              onChange={(e) => handleFieldChange("investigationRCA", e.target.value)}
               minRows={textAreaRows}
               style={{
                 width: "100%",
@@ -165,7 +176,7 @@ export default function TaskCard({ task: initialTask }) {
                 </Typography>
                 <TextareaAutosize
                   value={resolutions || ""}
-                  onChange={(e) => updateField("resolutions", e.target.value)}
+                  onChange={(e) => handleFieldChange("resolutions", e.target.value)}
                   minRows={textAreaRows}
                   style={{
                     width: "100%",
@@ -209,9 +220,7 @@ export default function TaskCard({ task: initialTask }) {
             </Typography>
             <TextareaAutosize
               value={dailyAccomplishments || ""}
-              onChange={(e) =>
-                updateField("dailyAccomplishments", e.target.value)
-              }
+              onChange={(e) => handleFieldChange("dailyAccomplishments", e.target.value)}
               minRows={textAreaRows}
               style={{
                 width: "100%",
@@ -270,12 +279,10 @@ export default function TaskCard({ task: initialTask }) {
             value={hours ?? ""}
             placeholder="HH"
             onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") updateField("hours", "");
-              else {
-                const num = parseInt(val);
-                if (!isNaN(num) && num >= 0 && num <= 24)
-                  updateField("hours", num);
+              const v = e.target.value;
+              const n = v === "" ? "" : parseInt(v);
+              if (v === "" || (!isNaN(n) && n >= 0 && n <= 24)) {
+                handleFieldChange("hours", n);
               }
             }}
             inputProps={{ min: 0, max: 24, style: { textAlign: "center" } }}
@@ -291,19 +298,15 @@ export default function TaskCard({ task: initialTask }) {
             }}
           />
           <InputBase
-            value={
-              minutes !== undefined && minutes !== ""
-                ? minutes.toString().padStart(2, "0")
-                : ""
-            }
             placeholder="MM"
+            value={
+              task.minutes != null ? String(task.minutes).padStart(2, "0") : ""
+            }
             onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") updateField("minutes", "");
-              else {
-                const num = parseInt(val);
-                if (!isNaN(num) && num >= 0 && num <= 59)
-                  updateField("minutes", num);
+              const v = e.target.value;
+              const n = v === "" ? "" : parseInt(v);
+              if (v === "" || (!isNaN(n) && n >= 0 && n <= 59)) {
+                handleFieldChange("minutes", n);
               }
             }}
             inputProps={{ min: 0, max: 59, style: { textAlign: "center" } }}
@@ -384,6 +387,7 @@ export default function TaskCard({ task: initialTask }) {
               {/* U */}
               <IconButton
                 size="small"
+                onClick={() => handleStatus("Updated")}
                 sx={{
                   bgcolor: colorCode,
                   color: "#000",
@@ -407,6 +411,7 @@ export default function TaskCard({ task: initialTask }) {
               {ticketId && isIssue && (
                 <IconButton
                   size="small"
+                  onClick={() => handleStatus("Resolved")}
                   sx={{
                     bgcolor: colorCode,
                     color: "#000",
@@ -434,6 +439,7 @@ export default function TaskCard({ task: initialTask }) {
                 !(isIssue && task.sr_no?.trim()) && (
                   <IconButton
                     size="small"
+                    onClick={() => handleStatus("Completed")}
                     sx={{
                       bgcolor: colorCode,
                       color: "#000",

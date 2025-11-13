@@ -1,7 +1,6 @@
 // Timesheet.jsx
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Box } from "@mui/material";
-import { getWeekTasks } from "./mockApi";
 import { TaskApi } from "../../api/taskApi";
 import TimesheetHeader from "./TimesheetHeader";
 import LegendsBar from "./LegendsBar";
@@ -16,6 +15,7 @@ const statusOptions = [
   "New",
   "In Progress",
   "On Hold",
+  "Updated",
   "Resolved",
   "Completed",
 ];
@@ -71,7 +71,61 @@ export default function Timesheet() {
   const config = formConfig[taskType];
   // Add this inside Timesheet() before return
   const today = new Date().toISOString().split("T")[0]; // already have todayStr
+  const debouncedSaveRef = useRef(null);
 
+  const debouncedSave = useCallback(
+    (taskId, updateObj) => {
+      // Cancel previous
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
+
+      // Optimistic UI (camelCase, no extras)
+      const optimistic = {
+        ...updateObj,
+        updatedDate: new Date().toISOString(),
+      };
+      setWeekData((prev) => ({
+        ...prev,
+        week: prev.week.map((day) =>
+          day.date === todayStr
+            ? {
+                ...day,
+                tasks: day.tasks.map((t) =>
+                  t.taskId === taskId ? { ...t, ...optimistic } : t
+                ),
+              }
+            : day
+        ),
+      }));
+
+      // Schedule API (build exact snake_case payload)
+      debouncedSaveRef.current = setTimeout(async () => {
+        try {
+          const isIssue = updateObj.taskType?.toLowerCase() === "issue";
+          const payload = {
+            taskId: updateObj.taskId,
+            ticketId: updateObj.ticketId,
+            colorCode: updateObj.colorCode,
+            taskType: updateObj.taskType,
+            status: updateObj.status,
+            hour: updateObj.hours ?? "",
+            minute: updateObj.minutes ?? "",
+            updatedDate: optimistic.updatedDate,
+            ...(isIssue
+              ? {
+                  rca_investigation: updateObj.investigationRCA ?? "",
+                  resolution_and_steps: updateObj.resolutions ?? "",
+                }
+              : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
+          };
+          //await TaskApi.createTask(taskId, payload); // ← Uncomment this
+          console.log("Expected api", taskId, payload); // Keep for debugging
+        } catch (e) {
+          console.error("Auto-save failed", e);
+        }
+      }, 600);
+    },
+    [todayStr]
+  );
   // === Mobile Detection ===
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -104,7 +158,9 @@ export default function Timesheet() {
 
   // === THIS IS THE useEffect YOU WANT TO RUN ON WEEK CHANGE ===
   useEffect(() => {
-    if (!selectedWeek?.week) return;
+    //console.log("Selectedweek in Timesheet", selectedWeek?.week);
+    if (selectedWeek?.length == 0 || selectedWeek == (undefined || null))
+      return;
 
     const loadTasks = async () => {
       try {
@@ -133,13 +189,6 @@ export default function Timesheet() {
       } catch (e) {
         console.error("Failed to load tasks:", e);
         // Fallback to mock data (optional)
-        const data = getWeekTasks();
-        const days = (data.week || []).filter(
-          (d) =>
-            selectedWeek.startDate <= d.date && d.date <= selectedWeek.endDate
-        );
-        setWeekData({ week: days });
-        setTodayIsInSelectedWeek(false);
       } finally {
         setLoadingTasks(false);
       }
@@ -173,25 +222,62 @@ export default function Timesheet() {
   }, []);
 
   // === Handlers ===
-  const handleAddTask = (legend) => {
-    const newTask = {
-      taskId: legend.task_code,
-      // hours: 0,
-      // minutes: 0,
-      ticketId: legend.ticket_id,
-      colorCode: legend.color_row,
-      taskType: legend.task_type,
-      status: legend.status,
-      //updatedDate: new Date().toISOString(),
-      dailyAccomplishments: "",
-      investigationRCA: "", // Required for issues
-      resolutions: "",
-    };
-    setWeekData((prev) => ({
-      week: prev.week.map((day) =>
-        day.date === todayStr ? { ...day, tasks: [...day.tasks, newTask] } : day
-      ),
-    }));
+  const handleAddTask = async (legend) => {
+    const taskId = legend.task_code;
+    const taskType = legend.task_type?.toLowerCase(); // normalize case
+    const now = new Date().toISOString(); // current ISO timestamp
+
+    let newTask;
+
+    if (taskType === "issue") {
+      newTask = {
+        taskId: legend.task_code,
+        ticketId: legend.ticket_id,
+        colorCode: legend.color_row,
+        taskType: legend.task_type,
+        status: legend.status,
+        rca_investigation: "",
+        resolution_and_steps: "",
+        hour: "",
+        minute: "",
+        updatedDate: now, // Include ISO timestamp
+      };
+    } else {
+      newTask = {
+        taskId: legend.task_code,
+        ticketId: legend.ticket_id,
+        colorCode: legend.color_row,
+        taskType: legend.task_type,
+        status: legend.status,
+        daily_accomplishment: "",
+        hour: "",
+        minute: "",
+        updatedDate: now, // Include ISO timestamp
+      };
+    }
+
+    try {
+      // Send task to backend API
+      await TaskApi.createTask(taskId, newTask);
+
+      // Update local week data state with new task
+      setWeekData((prev) => ({
+        ...prev,
+        week: prev.week.map((day) =>
+          day.date === todayStr
+            ? { ...day, tasks: [...day.tasks, newTask] }
+            : day
+        ),
+      }));
+
+      // Optionally refresh legends or week tasks
+      // loadLegends();
+      // setSelectedWeek(selectedWeek);
+    } catch (err) {
+      console.error("Failed to create task:", err);
+      // Optionally notify user
+      // alert("Error creating task. Please try again.");
+    }
   };
 
   const validateField = (name, value) => {
@@ -391,21 +477,36 @@ export default function Timesheet() {
               onAddTask={() => setColorDlgOpen(true)}
               isMobile={isMobile}
               showToday={todayIsInSelectedWeek}
+              debouncedSave={debouncedSave}
             />
           ))
         ) : (
           // ← NEW: No records message
           <Box
             sx={{
-              minHeight: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#aaa",
-              fontStyle: "italic",
-              fontSize: "1.1rem",
-              textAlign: "center",
-              p: 4,
+              mb: 4,
+              borderRadius: "0.75rem",
+              minHeight: "200px", // 👈 ensures a minimum height
+              display: "flex", // 👈 enables flexbox centering
+              justifyContent: "center", // 👈 horizontally center
+              alignItems: "center", // 👈 vertically center
+              textAlign: "center", // 👈 keeps text centered if multiline
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.8)",
+              background: {
+                xs: "rgba(255, 255, 255, 0.1)",
+                md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
+              },
+              backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+              WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+              border: {
+                xs: "1px solid rgba(255,255,255,0.1)",
+                md: "1px solid rgba(255,255,255,0.2)",
+              },
+              boxShadow: {
+                xs: "0 4px 16px rgba(0,0,0,0.1)",
+                md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
+              },
             }}
           >
             No records present

@@ -10,6 +10,7 @@ export default function DayCard({
   onAddTask,
   isMobile,
   showToday,
+  debouncedSave,
 }) {
   return (
     <Box
@@ -124,13 +125,13 @@ export default function DayCard({
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {day.tasks.map((task, index) => (
               <Box
-                key={task.id}
+                key={task.taskId}
                 sx={{
                   borderBottom:
                     index !== day.tasks.length - 1 ? "2px solid #fff" : "none",
                 }}
               >
-                <TaskCard task={task} date={day.date} />
+                <TaskCard task={task} date={day.date} debouncedSave={debouncedSave} />
               </Box>
             ))}
           </Box>

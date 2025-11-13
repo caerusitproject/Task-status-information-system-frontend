@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { theme } from "../../theme/theme";
 import { TaskApi } from "../../api/taskApi";
+import { Skeleton } from "@mui/material";
 
 export default function WeekDropdown({ onWeekChange }) {
   const [weekDropdownOpen, setWeekDropdownOpen] = useState(false);
@@ -34,7 +35,9 @@ export default function WeekDropdown({ onWeekChange }) {
 
           // If we had a previously selected week ID, try to keep it
           if (selectedWeekId !== null) {
-            const matchingWeek = weekList.find(w => w.week === selectedWeekId);
+            const matchingWeek = weekList.find(
+              (w) => w.week === selectedWeekId
+            );
             if (matchingWeek) {
               weekToSelect = matchingWeek;
             }
@@ -61,7 +64,10 @@ export default function WeekDropdown({ onWeekChange }) {
   // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (weekDropdownRef.current && !weekDropdownRef.current.contains(event.target)) {
+      if (
+        weekDropdownRef.current &&
+        !weekDropdownRef.current.contains(event.target)
+      ) {
         setWeekDropdownOpen(false);
       }
     };
@@ -75,13 +81,62 @@ export default function WeekDropdown({ onWeekChange }) {
     onWeekChange(week);
   };
 
-  const handlePrev = () => setApiValue(prev => prev - 1);
-  const handleNext = () => setApiValue(prev => prev + 1);
+  const handlePrev = () => setApiValue((prev) => prev - 1);
+  const handleNext = () => setApiValue((prev) => prev + 1);
 
   if (loading) {
     return (
-      <div style={{ padding: "0.5rem 1rem", color: theme.colors.text.secondary }}>
-        Loading weeks...
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          marginBottom: theme.spacing.md,
+          width: isMobile ? "100%" : "auto",
+          maxWidth: isMobile ? "180px" : "none",
+          flex: isMobile ? "1 1 60%" : "0 1 auto",
+        }}
+      >
+        {/* ← Arrow */}
+        <Skeleton
+          variant="rounded"
+          width={36}
+          height={36}
+          animation="wave"
+          sx={{
+            borderRadius: "0.375rem",
+            bgcolor: "rgba(255,255,255,0.1)",
+          }}
+        />
+
+        {/* Dropdown button skeleton */}
+        <div style={{ flex: 1, display: "flex" }}>
+          <Skeleton
+            variant="rounded"
+            height={36}
+            width="100%"
+            animation="wave"
+            sx={{
+              display: "block", // ✅ ensures it takes full horizontal space
+              flex: 1, // ✅ makes sure it grows to fill flex container
+              borderRadius: "0.5rem",
+              bgcolor: "rgba(255,255,255,0.1)", // visible on dark background
+              border: `0.0625rem solid ${theme.colors.lightGray}`,
+            }}
+          />
+        </div>
+
+        {/* → Arrow */}
+        <Skeleton
+          variant="rounded"
+          width={36}
+          height={36}
+          animation="wave"
+          sx={{
+            borderRadius: "0.375rem",
+            bgcolor: "rgba(255,255,255,0.1)",
+          }}
+        />
       </div>
     );
   }
@@ -94,7 +149,7 @@ export default function WeekDropdown({ onWeekChange }) {
     );
   }
 
-  const selectedWeek = weeks.find(w => w.week === selectedWeekId) || weeks[0];
+  const selectedWeek = weeks.find((w) => w.week === selectedWeekId) || weeks[0];
 
   return (
     <div
@@ -161,8 +216,16 @@ export default function WeekDropdown({ onWeekChange }) {
             e.currentTarget.style.borderColor = theme.colors.lightGray;
           }}
         >
-          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
-            {formatDate(selectedWeek.startDate)} - {formatDate(selectedWeek.endDate)}
+          <span
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              flex: 1,
+            }}
+          >
+            {formatDate(selectedWeek.startDate)} -{" "}
+            {formatDate(selectedWeek.endDate)}
           </span>
           <ChevronDown
             size={16}
@@ -198,7 +261,10 @@ export default function WeekDropdown({ onWeekChange }) {
                   width: "100%",
                   textAlign: "left",
                   padding: "0.75rem 1rem",
-                  backgroundColor: week.week === selectedWeekId ? theme.colors.lightGray : "transparent",
+                  backgroundColor:
+                    week.week === selectedWeekId
+                      ? theme.colors.lightGray
+                      : "transparent",
                   border: "none",
                   fontWeight: week.week === selectedWeekId ? 600 : 500,
                   color: theme.colors.text.primary,
@@ -206,9 +272,15 @@ export default function WeekDropdown({ onWeekChange }) {
                   fontSize: "0.875rem",
                   transition: "background-color 0.2s ease",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.colors.lightGray)}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    theme.colors.lightGray)
+                }
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = week.week === selectedWeekId ? theme.colors.lightGray : "transparent";
+                  e.currentTarget.style.backgroundColor =
+                    week.week === selectedWeekId
+                      ? theme.colors.lightGray
+                      : "transparent";
                 }}
               >
                 {formatDate(week.startDate)} - {formatDate(week.endDate)}
