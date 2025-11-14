@@ -148,4 +148,20 @@ export const TaskApi = {
       throw error;
     }
   },
+  async updateTask(pId, data) {
+    try {
+      const response = await axios.put(
+        `${LOCAL_API}/timeSheet/edit-each-task-details/${pId}`,
+        data,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error creating task:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
 };

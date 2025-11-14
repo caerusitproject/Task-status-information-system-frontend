@@ -29,7 +29,7 @@ export default function WeekDropdown({ onWeekChange }) {
         const weekList = response.content || [];
         weekList.sort((a, b) => a.week - b.week);
         setWeeks(weekList);
-
+        //console.log("weeklist",weekList)
         if (weekList.length > 0) {
           let weekToSelect = weekList[0];
 

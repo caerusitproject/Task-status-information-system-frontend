@@ -103,6 +103,7 @@ export default function Timesheet() {
         try {
           const isIssue = updateObj.taskType?.toLowerCase() === "issue";
           const payload = {
+            id:updateObj.id,
             taskId: updateObj.taskId,
             ticketId: updateObj.ticketId,
             colorCode: updateObj.colorCode,
@@ -118,8 +119,8 @@ export default function Timesheet() {
                 }
               : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
           };
-          //await TaskApi.createTask(taskId, payload); // ← Uncomment this
-          console.log("Expected api", taskId, payload); // Keep for debugging
+          await TaskApi.updateTask( payload.id, payload); // ← Uncomment this
+          console.log("Expected api", payload.id, payload); // Keep for debugging
         } catch (e) {
           console.error("Auto-save failed", e);
         }
@@ -268,9 +269,10 @@ export default function Timesheet() {
 
     try {
       // Send task to backend API
-      await TaskApi.createTask(taskId, newTask);
-
-      // Update local week data state with new task
+     const response =  await TaskApi.createTask(taskId, newTask);
+     
+      //console.log(response?.content?.id)
+      newTask.id = response?.content?.id;
       setWeekData((prev) => ({
         ...prev,
         week: prev.week.map((day) =>
@@ -343,6 +345,7 @@ export default function Timesheet() {
     let payload = {};
     if (taskType === "issue") {
       payload = {
+
         reported_by: formData.requestedBy,
         ticket_id: formData.ticketId,
         statement_of_the_issue: formData.description,
