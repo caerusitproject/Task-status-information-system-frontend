@@ -106,6 +106,7 @@ export default function Timesheet() {
             id:updateObj.id,
             taskId: updateObj.taskId,
             ticketId: updateObj.ticketId,
+            sr_no:updateObj.sr_no,
             colorCode: updateObj.colorCode,
             taskType: updateObj.taskType,
             status: updateObj.status,
@@ -118,9 +119,14 @@ export default function Timesheet() {
                   resolution_and_steps: updateObj.resolutions ?? "",
                 }
               : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
+  //             ...(updateObj.headerSelections && {
+  //   header_app: updateObj.headerSelections.app || "",
+  //   header_module: updateObj.headerSelections.module || "",
+  //   header_report: updateObj.headerSelections.report || "",
+  // }),
           };
           await TaskApi.updateTask( payload.id, payload); // ← Uncomment this
-          console.log("Expected api", payload.id, payload); // Keep for debugging
+          //console.log("Expected api", payload.id, payload); // Keep for debugging
         } catch (e) {
           console.error("Auto-save failed", e);
         }
@@ -246,6 +252,7 @@ export default function Timesheet() {
         ticketId: legend.ticket_id,
         colorCode: legend.color_row,
         taskType: legend.task_type,
+        sr_no:legend.sr_no,
         status: legend.status,
         rca_investigation: "",
         resolution_and_steps: "",

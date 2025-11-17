@@ -6,6 +6,7 @@ import { theme } from "../../theme/theme";
 import AddIcon from "@mui/icons-material/Add";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
+import TaskHeaderStrip from "./TaskHeaderStrip";
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +20,7 @@ import {
   TableCell,
 } from "@mui/material";
 
-export default function TaskCard({ task: initialTask, debouncedSave }) {
+export default function TaskCard({ task: initialTask, date, debouncedSave }) {
   const [task, setTask] = useState(initialTask);
   //console.log("Tasks", task);
   useEffect(() => {
@@ -41,12 +42,14 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
     resolutions,
     updatedDate,
   } = task;
+  console.log(task)
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState("");
+  const [showError, setShowError] = useState(false);
   // ── put this right after the other useState hooks ──
   useEffect(() => {
     const styleId = `ck-style-${taskId}`;
@@ -56,12 +59,25 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
     const style = document.createElement("style");
     style.id = styleId;
     style.textContent = `
-    #ck-wrapper-${taskId} .ck-editor__editable {
-      background-color: ${colorCode} !important;
-      min-height: 200px !important;
-      padding: 12px !important;
-    }
-  `;
+  #ck-wrapper-${taskId} .ck-editor__editable {
+    background-color: ${colorCode} !important;
+    min-height: 200px !important;
+    padding: 12px !important;
+  }
+
+  /* FORCE FULL WIDTH TABLE */
+  #ck-wrapper-${taskId} .ck-editor__editable table {
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  #ck-wrapper-${taskId} .ck-editor__editable table td {
+    width: auto !important;
+    word-break: break-word;
+  }
+`;
+
     document.head.appendChild(style);
 
     return () => {
@@ -95,26 +111,60 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
   const openQueryDialog = (setTask, task, debouncedSave) => {
     setQuery("");
     setResult("");
+    setShowError(false);
     setDialogOpen(true);
+  };
+
+  const onHeaderChange = (newSel) => {
+    // If you need to do something else when header changes
+    // e.g. console.log("Header changed:", newSel);
   };
 
   const handleSaveQuery = () => {
     const tableHtml = `
-    <table border="1" style="width:100%; border-collapse: collapse; margin: 8px 0;">
-      <tr><td style="padding:4px; background:#f0f0f0;"><strong>Query</strong></td></tr>
-      <tr><td style="padding:4px;">${query.replace(/\n/g, "<br>")}</td></tr>
-      <tr><td style="padding:4px; background:#f0f0f0;"><strong>Result</strong></td></tr>
-      <tr><td style="padding:4px;">${result.replace(/\n/g, "<br>")}</td></tr>
+<table border="1" style="width:100% !important; min-width:100% !important; border-collapse: collapse; margin: 12px 0;">
+      <tr><td style="padding:8px; background:#f0f0f0;"><strong>Query</strong></td></tr>
+      <tr><td style="padding:8px;">${query.replace(/\n/g, "<br>")}</td></tr>
+      <tr><td style="padding:8px; background:#f0f0f0;"><strong>Result</strong></td></tr>
+      <tr><td style="padding:8px;">${result.replace(/\n/g, "<br>")}</td></tr>
     </table>
+    <p></p>
   `;
 
-    // Append to current field (e.g., investigationRCA)
-    const field = "investigationRCA"; // ← change per editor if needed
-    const updated = { ...task, [field]: (task[field] || "") + tableHtml };
+    // Determine which field we are editing
+    const field = isIssue ? "investigationRCA" : "dailyAccomplishments";
+    const currentContent = task[field] || "";
 
-    setTask(updated);
-    debouncedSave(task.taskId, updated);
+    // Append the table HTML
+    const newContent = currentContent + tableHtml;
 
+    // Update React state (this will update CKEditor content)
+    const updatedTask = { ...task, [field]: newContent };
+    setTask(updatedTask);
+    debouncedSave(task.taskId, updatedTask);
+
+    // ——— THE IMPORTANT PART: move cursor after the table ———
+    // correct cursor placement
+    setTimeout(() => {
+      const editor = window.lastActiveEditor;
+      if (!editor) return;
+
+      editor.model.change((writer) => {
+        const endPos = writer.createPositionAt(
+          editor.model.document.getRoot(),
+          "end"
+        );
+
+        const paragraph = writer.createElement("paragraph");
+        writer.insert(paragraph, endPos);
+        writer.setSelection(paragraph, 0);
+      });
+
+      editor.editing.view.focus();
+    }, 50);
+
+    setQuery("");
+    setResult("");
     setDialogOpen(false);
   };
   return (
@@ -186,32 +236,14 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
           }}
         >
           {/* ---------- 1. Header strip (Investigation and RCA) ---------- */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              // backgroundColor: "#f5f5f5",
-              padding: "8px 16px",
-              borderRadius: "6px",
-              m: 0.5,
-              border: "1px solid #e0e0e0",
-            }}
-          >
-            <Typography
-              sx={{
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "#f5f5f5",
-              }}
-            >
-              Header Strip
-            </Typography>
-
-            <IconButton size="small" color="primary">
-              <AddIcon fontSize="small" />
-            </IconButton>
-          </Box>
+          <TaskHeaderStrip
+            taskId={task.taskId}
+            date={date}
+            initialSelections={task.headerSelections || {}}
+            onHeaderChange={onHeaderChange}
+            debouncedSave={debouncedSave}
+            colorCode={colorCode}
+          />
 
           {/* ---------- 2. The coloured content area ---------- */}
           <Box
@@ -247,30 +279,27 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
                         "numberedList",
                       ],
                     }}
-                    //                     onKeyDown={(event) => {
-                    //                       console.log("event key down",event)
-                    //           if (event.nativeEvent.ctrlKey && event.nativeEvent.key.toLowerCase() === "q") {
-                    //             event.nativeEvent.preventDefault();
-                    //             openQueryDialog(setTask, task, debouncedSave);
-                    //           }
-                    //         }}
-                    //                     onReady={(editor) => {
-                    //   editor.editing.view.document.on(
-                    //     "keydown",
-                    //     (evt, data) => {
-                    //       console.log("CK key:", data.key, "ctrl?", data.ctrlKey);
+                    onReady={(editor) => {
+                      // Keep track of the last focused editor
+                      editor.editing.view.document.on("focus", () => {
+                        window.lastActiveEditor = editor;
+                      });
 
-                    //       if (data.ctrlKey && data.key.toLowerCase() === "q") {
-                    //         data.preventDefault();
-                    //         evt.stop();
-
-                    //         openQueryDialog(setTask, task, debouncedSave);
-                    //       }
-                    //     },
-                    //     { priority: "highest" }
-                    //   );
-                    // }}
-
+                      // Your existing Ctrl+Q code
+                      editor.editing.view.document.on(
+                        "keydown",
+                        (evt, data) => {
+                          if (data.ctrlKey || data.metaKey) {
+                            if (data.keyCode === 81) {
+                              data.preventDefault();
+                              evt.stop();
+                              openQueryDialog();
+                            }
+                          }
+                        },
+                        { priority: "highest" }
+                      );
+                    }}
                     onChange={(event, editor) => {
                       handleFieldChange("investigationRCA", editor.getData());
                     }}
@@ -310,48 +339,45 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
                       Resolution and steps taken to mitigate the issues:
                     </Typography>
                     <Box id={`ck-wrapper-${taskId}`} sx={{ width: "100%" }}>
-                  <CKEditor
-                    editor={ClassicEditor}
-                     data={resolutions || ""}
-                    config={{
-                      toolbar: [
-                        "bold",
-                        "italic",
-                        "link",
-                        "|",
-                        "bulletedList",
-                        "numberedList",
-                      ],
-                    }}
-                    //                     onKeyDown={(event) => {
-                    //                       console.log("event key down",event)
-                    //           if (event.nativeEvent.ctrlKey && event.nativeEvent.key.toLowerCase() === "q") {
-                    //             event.nativeEvent.preventDefault();
-                    //             openQueryDialog(setTask, task, debouncedSave);
-                    //           }
-                    //         }}
-                    //                     onReady={(editor) => {
-                    //   editor.editing.view.document.on(
-                    //     "keydown",
-                    //     (evt, data) => {
-                    //       console.log("CK key:", data.key, "ctrl?", data.ctrlKey);
+                      <CKEditor
+                        editor={ClassicEditor}
+                        data={resolutions || ""}
+                        config={{
+                          toolbar: [
+                            "bold",
+                            "italic",
+                            "link",
+                            "|",
+                            "bulletedList",
+                            "numberedList",
+                          ],
+                        }}
+                        onReady={(editor) => {
+                          // Keep track of the last focused editor
+                          editor.editing.view.document.on("focus", () => {
+                            window.lastActiveEditor = editor;
+                          });
 
-                    //       if (data.ctrlKey && data.key.toLowerCase() === "q") {
-                    //         data.preventDefault();
-                    //         evt.stop();
-
-                    //         openQueryDialog(setTask, task, debouncedSave);
-                    //       }
-                    //     },
-                    //     { priority: "highest" }
-                    //   );
-                    // }}
-
-                    onChange={(event, editor) => {
-                      handleFieldChange("investigationRCA", editor.getData());
-                    }}
-                  />
-                </Box>
+                          // Your existing Ctrl+Q code
+                          editor.editing.view.document.on(
+                            "keydown",
+                            (evt, data) => {
+                              if (data.ctrlKey || data.metaKey) {
+                                if (data.keyCode === 81) {
+                                  data.preventDefault();
+                                  evt.stop();
+                                  openQueryDialog();
+                                }
+                              }
+                            },
+                            { priority: "highest" }
+                          );
+                        }}
+                        onChange={(event, editor) => {
+                          handleFieldChange("resolutions", editor.getData());
+                        }}
+                      />
+                    </Box>
                     {/* <TextareaAutosize
                       value={resolutions || ""}
                       onChange={(e) =>
@@ -403,7 +429,7 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
                 <Box id={`ck-wrapper-${taskId}`} sx={{ width: "100%" }}>
                   <CKEditor
                     editor={ClassicEditor}
-                     data={dailyAccomplishments || ""}
+                    data={dailyAccomplishments || ""}
                     config={{
                       toolbar: [
                         "bold",
@@ -414,36 +440,36 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
                         "numberedList",
                       ],
                     }}
-                    //                     onKeyDown={(event) => {
-                    //                       console.log("event key down",event)
-                    //           if (event.nativeEvent.ctrlKey && event.nativeEvent.key.toLowerCase() === "q") {
-                    //             event.nativeEvent.preventDefault();
-                    //             openQueryDialog(setTask, task, debouncedSave);
-                    //           }
-                    //         }}
-                    //                     onReady={(editor) => {
-                    //   editor.editing.view.document.on(
-                    //     "keydown",
-                    //     (evt, data) => {
-                    //       console.log("CK key:", data.key, "ctrl?", data.ctrlKey);
+                    onReady={(editor) => {
+                      // Keep track of the last focused editor
+                      editor.editing.view.document.on("focus", () => {
+                        window.lastActiveEditor = editor;
+                      });
 
-                    //       if (data.ctrlKey && data.key.toLowerCase() === "q") {
-                    //         data.preventDefault();
-                    //         evt.stop();
-
-                    //         openQueryDialog(setTask, task, debouncedSave);
-                    //       }
-                    //     },
-                    //     { priority: "highest" }
-                    //   );
-                    // }}
-
+                      // Your existing Ctrl+Q code
+                      editor.editing.view.document.on(
+                        "keydown",
+                        (evt, data) => {
+                          if (data.ctrlKey || data.metaKey) {
+                            if (data.keyCode === 81) {
+                              data.preventDefault();
+                              evt.stop();
+                              openQueryDialog();
+                            }
+                          }
+                        },
+                        { priority: "highest" }
+                      );
+                    }}
                     onChange={(event, editor) => {
-                      handleFieldChange("investigationRCA", editor.getData());
+                      handleFieldChange(
+                        "dailyAccomplishments",
+                        editor.getData()
+                      );
                     }}
                   />
                 </Box>
-               
+
                 {updatedDate && showFooter && (
                   <Box
                     sx={{
@@ -555,7 +581,7 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
             }}
           >
             {/* SR Number Chip */}
-            {isIssue && task.sr_no && (
+            { sr_no && (
               <Chip
                 label={`SR: ${task.sr_no}`}
                 sx={{
@@ -688,31 +714,138 @@ export default function TaskCard({ task: initialTask, debouncedSave }) {
         onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: "#1e1e1e",
+            color: "#fff",
+            borderRadius: 3,
+            boxShadow: "0 16px 60px rgba(0,0,0,0.7)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            overflow: "hidden",
+          },
+        }}
       >
-        <DialogTitle>Add Query & Result</DialogTitle>
-        <DialogContent>
+        {/* <DialogTitle
+    sx={{
+      bgcolor: theme.colors.primary || "#0066ff",
+      color: "#fff",
+      py: 2,
+      textAlign: "center",
+      fontWeight: 600,
+      fontSize: "1.25rem",
+    }}
+  >
+    Add Query & Result
+  </DialogTitle> */}
+
+        <DialogContent sx={{ pt: 4, pb: 2, px: 3 }}>
+          {/* Query Field */}
           <TextField
-            label="Query (SQL)"
+            autoFocus
+            label="Query (SQL / Logic)"
+            required
             multiline
-            rows={4}
+            rows={5}
             fullWidth
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            sx={{ mt: 1 }}
+            // Only show error + message after failed attempt
+            error={showError && !query.trim()}
+            helperText={showError && !query.trim() ? "Query is required" : " "}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#fff" } }}
+            sx={{
+              mb: 3,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: "rgba(255,255,255,0.05)",
+                "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                "&:hover fieldset": { borderColor: "rgba(255,255,255,0.4)" },
+                "&.Mui-focused fieldset": {
+                  borderColor: theme.colors.primary || "#0066ff",
+                },
+                "&.Mui-error fieldset": { borderColor: "#ff6b6b" }, // red only when error
+              },
+              "& .MuiFormHelperText-root": {
+                color: "#ff6b6b", // red message
+                fontSize: "0.8rem",
+              },
+            }}
           />
+
+          {/* Result Field */}
           <TextField
-            label="Result"
+            label="Result / Observation"
+            required
             multiline
-            rows={4}
+            rows={5}
             fullWidth
             value={result}
             onChange={(e) => setResult(e.target.value)}
-            sx={{ mt: 2 }}
+            error={showError && !result.trim()}
+            helperText={
+              showError && !result.trim() ? "Result is required" : " "
+            }
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#fff" } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: "rgba(255,255,255,0.05)",
+                "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                "&:hover fieldset": { borderColor: "rgba(255,255,255,0.4)" },
+                "&.Mui-focused fieldset": {
+                  borderColor: theme.colors.primary || "#0066ff",
+                },
+                "&.Mui-error fieldset": { borderColor: "#ff6b6b" },
+              },
+              "& .MuiFormHelperText-root": {
+                color: "#ff6b6b",
+                fontSize: "0.8rem",
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveQuery} variant="contained">
+
+        <DialogActions
+          sx={{ px: 3, pb: 4, justifyContent: "flex-end", gap: 2 }}
+        >
+          <Button
+            onClick={() => setDialogOpen(false)}
+            style={{
+              padding: "0.5rem 1.5rem",
+              border: `0.0625rem solid ${theme.colors.lightGray}`,
+              backgroundColor: theme.colors.surface,
+              color: theme.colors.text.secondary,
+              borderRadius: "0.375rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={() => {
+              // Trigger validation only when clicking Insert
+              if (!query.trim() || !result.trim()) {
+                setShowError(true);
+                return;
+              }
+              handleSaveQuery();
+            }}
+            style={{
+              padding: "0.5rem 1.5rem",
+              backgroundColor: theme.colors.primary,
+              color: theme.colors.white,
+              border: "none",
+              borderRadius: "0.375rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
             Save
           </Button>
         </DialogActions>
