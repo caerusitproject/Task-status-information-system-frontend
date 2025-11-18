@@ -14,13 +14,9 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { theme } from "../../theme/theme";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 
 // Dummy + Dynamic Reports (will grow when user adds custom ones)
-const baseDummyData = {
-  applications: ["CRM", "ERP", "HRMS", "Billing", "Inventory"],
-  modules: ["User Management", "Reports", "Workflow", "Notifications", "Settings"],
-  reports: ["Daily Sales", "User Activity", "Error Log", "Performance Report", "Audit Trail"],
-};
 
 export default function TaskHeaderStrip({
   taskId,
@@ -30,28 +26,71 @@ export default function TaskHeaderStrip({
   debouncedSave,
   colorCode,
 }) {
+  const baseDummyData = {
+    applications: ["Oracle", "Salesforce", "SAP"],
+    modulesByApp: {
+      Oracle: ["Users", "Roles", "Audit Logs"],
+      Salesforce: ["Leads", "Contacts", "Analytics"],
+      SAP: ["Finance", "Inventory", "HR"],
+    },
+    // modules: [
+    //   "User Management",
+    //   "Reports",
+    //   "Workflow",
+    //   "Notifications",
+    //   "Settings",
+    // ],
+    reports: [
+      "Daily Sales",
+      "User Activity",
+      "Error Log",
+      "Performance Report",
+      "Audit Trail",
+    ],
+  };
   const todayStr = new Date().toISOString().split("T")[0];
   const isToday = date === todayStr;
 
   // Dynamic report list (starts with dummy + grows with custom entries)
-  const [dynamicReports, setDynamicReports] = useState([...baseDummyData.reports]);
+  const [dynamicReports, setDynamicReports] = useState([
+    // ...baseDummyData.reports,
+  ]);
+  const [submenuAnchor, setSubmenuAnchor] = useState(null);
+  const [selectedAppForModules, setSelectedAppForModules] = useState(null);
 
   const [selections, setSelections] = useState({
     apps: Array.isArray(initialSelections.apps) ? initialSelections.apps : [],
-    modules: Array.isArray(initialSelections.modules) ? initialSelections.modules : [],
-    reports: Array.isArray(initialSelections.reports) ? initialSelections.reports : [],
+    modules: Array.isArray(initialSelections.modules)
+      ? initialSelections.modules
+      : [],
+    reports: Array.isArray(initialSelections.reports)
+      ? initialSelections.reports
+      : [],
   });
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuType, setMenuType] = useState(""); // "app" | "module" | "report"
   const [reportInput, setReportInput] = useState("");
 
+  // const baseDummyData = {
+  //   applications: ["Oracle", "Salesforce", "SAP"],
+  //   modulesByApp: {
+  //     Oracle: ["Users", "Roles", "Audit Logs"],
+  //     Salesforce: ["Leads", "Contacts", "Analytics"],
+  //     SAP: ["Finance", "Inventory", "HR"],
+  //   },
+  // };
+
   // Sync from parent
   useEffect(() => {
     setSelections({
       apps: Array.isArray(initialSelections.apps) ? initialSelections.apps : [],
-      modules: Array.isArray(initialSelections.modules) ? initialSelections.modules : [],
-      reports: Array.isArray(initialSelections.reports) ? initialSelections.reports : [],
+      modules: Array.isArray(initialSelections.modules)
+        ? initialSelections.modules
+        : [],
+      reports: Array.isArray(initialSelections.reports)
+        ? initialSelections.reports
+        : [],
     });
   }, [initialSelections]);
 
@@ -72,15 +111,105 @@ export default function TaskHeaderStrip({
     onHeaderChange?.(newSel);
   };
 
+  // const toggleItem = (type, value) => {
+  //   const key =
+  //     type === "app" ? "apps" : type === "module" ? "modules" : "reports";
+  //   const current = selections[key];
+
+  //   const updated = current.includes(value)
+  //     ? current.filter((i) => i !== value)
+  //     : [...current, value];
+
+  //   saveSelection({ ...selections, [key]: updated });
+  // };
+
+  // const toggleItem = (type, value) => {
+  //   const key =
+  //     type === "app" ? "apps" : type === "module" ? "modules" : "reports";
+
+  //   const current = selections[key];
+
+  //   let updated;
+
+  //   if (type === "app") {
+  //     // App should ONLY be added, never removed automatically
+  //     if (!current.includes(value)) {
+  //       updated = [...current, value]; // add app
+  //     } else {
+  //       updated = current; // ❗ keep it selected even if clicked again OR modules unselect
+  //     }
+  //   } else {
+  //     // Normal toggle for modules and reports
+  //     updated = current.includes(value)
+  //       ? current.filter((i) => i !== value)
+  //       : [...current, value];
+  //   }
+
+  //   saveSelection({ ...selections, [key]: updated });
+  // };
   const toggleItem = (type, value) => {
-    const key = type === "app" ? "apps" : type === "module" ? "modules" : "reports";
-    const current = selections[key];
+    const newSelections = { ...selections };
 
-    const updated = current.includes(value)
-      ? current.filter((i) => i !== value)
-      : [...current, value];
+    if (type === "app") {
+      // Clicking an app: add it (user wants it), but it can be removed later if no modules
+      if (!newSelections.apps.includes(value)) {
+        newSelections.apps = [...newSelections.apps, value];
+      }
+      // Clicking again? Do nothing — can't manually deselect
+    } else if (type === "module") {
+      // Toggle module
+      const wasSelected = newSelections.modules.includes(value);
+      if (wasSelected) {
+        newSelections.modules = newSelections.modules.filter(
+          (m) => m !== value
+        );
+      } else {
+        newSelections.modules = [...newSelections.modules, value];
+      }
 
-    saveSelection({ ...selections, [key]: updated });
+      // Find parent app
+      let parentApp = null;
+      for (const [app, modules] of Object.entries(baseDummyData.modulesByApp)) {
+        if (modules.includes(value)) {
+          parentApp = app;
+          break;
+        }
+      }
+
+      if (parentApp) {
+        const appModules = baseDummyData.modulesByApp[parentApp];
+        const selectedCount = appModules.filter((m) =>
+          newSelections.modules.includes(m)
+        ).length;
+
+        // Rule: App must be selected ONLY if at least one module is selected
+        if (selectedCount > 0) {
+          if (!newSelections.apps.includes(parentApp)) {
+            newSelections.apps = [...newSelections.apps, parentApp];
+          }
+        } else {
+          // No modules selected → remove app, even if user clicked it earlier
+          newSelections.apps = newSelections.apps.filter(
+            (a) => a !== parentApp
+          );
+        }
+      }
+    } else if (type === "report") {
+      newSelections.reports = newSelections.reports.includes(value)
+        ? newSelections.reports.filter((r) => r !== value)
+        : [...newSelections.reports, value];
+    }
+
+    // Final cleanup: Remove any app that has zero selected modules
+    // This ensures consistency even if someone manually added an app with no modules
+    const validApps = newSelections.apps.filter((app) => {
+      const modules = baseDummyData.modulesByApp[app] || [];
+      return modules.some((m) => newSelections.modules.includes(m));
+    });
+
+    newSelections.apps = validApps;
+
+    saveSelection(newSelections);
   };
 
   const handleReportSave = () => {
@@ -98,10 +227,26 @@ export default function TaskHeaderStrip({
   };
 
   const handleDelete = (type, value) => {
-    const key = type === "app" ? "apps" : type === "module" ? "modules" : "reports";
+    const key =
+      type === "app" ? "apps" : type === "module" ? "modules" : "reports";
     const updated = selections[key].filter((i) => i !== value);
     saveSelection({ ...selections, [key]: updated });
   };
+
+  const closeSubMenu = () => {
+    setSubmenuAnchor(null);
+    setSelectedAppForModules(null);
+  };
+
+  const openSubMenu = (event, app) => {
+    setSelectedAppForModules(app);
+    setSubmenuAnchor(event.currentTarget);
+  };
+
+  const isAppChecked = (app) =>
+    selections.modules.some((mod) =>
+      baseDummyData?.modulesByApp[app]?.includes(mod)
+    );
 
   return (
     <>
@@ -117,7 +262,14 @@ export default function TaskHeaderStrip({
           border: "1px solid #e0e0e0",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
           <Typography
             sx={{
               fontWeight: 600,
@@ -158,7 +310,7 @@ export default function TaskHeaderStrip({
                 size="small"
                 onDelete={() => handleDelete("module", mod)}
                 sx={{
-                   bgcolor: colorCode,
+                  bgcolor: colorCode,
                   color: "#000",
                   p: 1,
                   borderRadius: "999px",
@@ -191,7 +343,11 @@ export default function TaskHeaderStrip({
         </Box>
 
         {isToday && (
-          <IconButton size="small" onClick={openMenu} sx={{ color: theme.colors.text.primary }}>
+          <IconButton
+            size="small"
+            onClick={openMenu}
+            sx={{ color: theme.colors.text.primary }}
+          >
             <AddIcon fontSize="small" />
           </IconButton>
         )}
@@ -210,7 +366,7 @@ export default function TaskHeaderStrip({
       </Menu>
 
       {/* ────── APPLICATION (Beautiful Checkbox) ────── */}
-      <Menu anchorEl={anchorEl} open={menuType === "app"} onClose={closeMenu}>
+      {/* <Menu anchorEl={anchorEl} open={menuType === "app"} onClose={closeMenu}>
         {baseDummyData.applications.map((app) => (
           <MenuItem key={app} onClick={() => toggleItem("app", app)} sx={{ py: 0.5 }}>
             <Checkbox
@@ -224,10 +380,10 @@ export default function TaskHeaderStrip({
             <ListItemText primary={app} />
           </MenuItem>
         ))}
-      </Menu>
+      </Menu> */}
 
       {/* ────── MODULE (Beautiful Checkbox) ────── */}
-      <Menu anchorEl={anchorEl} open={menuType === "module"} onClose={closeMenu}>
+      {/* <Menu anchorEl={anchorEl} open={menuType === "module"} onClose={closeMenu}>
         {baseDummyData.modules.map((mod) => (
           <MenuItem key={mod} onClick={() => toggleItem("module", mod)} sx={{ py: 0.5 }}>
             <Checkbox
@@ -241,6 +397,66 @@ export default function TaskHeaderStrip({
             <ListItemText primary={mod} />
           </MenuItem>
         ))}
+      </Menu> */}
+
+      {/* ───── APPLICATION MENU ───── */}
+      <Menu anchorEl={anchorEl} open={menuType === "app"} onClose={closeMenu}>
+        {baseDummyData.applications.map((app) => (
+          <MenuItem
+            key={app}
+            sx={{ py: 0.5 }}
+            onClick={(e) => {
+              toggleItem("app", app);
+              openSubMenu(e, app);
+            }} // <-- open submenu
+          >
+            {console.log("checkbox___", selections)}
+            <Checkbox
+              size="small"
+              checked={isAppChecked(app)}
+              sx={{
+                color: "#999",
+                "&.Mui-checked": { color: theme.colors.primary },
+              }}
+            />
+            <ListItemText primary={app} />
+            <span style={{ marginLeft: "auto" }}>
+              <KeyboardArrowRightIcon />
+            </span>{" "}
+            {/* Right arrow */}
+          </MenuItem>
+        ))}
+      </Menu>
+
+      {/* ───── MODULE SUBMENU (Loads modules for selected app) ───── */}
+      <Menu
+        anchorEl={submenuAnchor}
+        open={Boolean(submenuAnchor)}
+        onClose={closeSubMenu}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        {selectedAppForModules &&
+          baseDummyData.modulesByApp[selectedAppForModules]?.map((mod) => (
+            <MenuItem
+              key={mod}
+              onClick={() => {
+                toggleItem("module", mod);
+                closeSubMenu();
+              }}
+              sx={{ py: 0.5 }}
+            >
+              <Checkbox
+                size="small"
+                checked={selections.modules.includes(mod)}
+                sx={{
+                  color: "#999",
+                  "&.Mui-checked": { color: theme.colors.primary },
+                }}
+              />
+              <ListItemText primary={mod} />
+            </MenuItem>
+          ))}
       </Menu>
 
       {/* ────── REPORT (Dynamic List + Custom Input) ────── */}
@@ -257,7 +473,11 @@ export default function TaskHeaderStrip({
 
           {/* Dynamic Report List */}
           {dynamicReports.map((r) => (
-            <MenuItem key={r} onClick={() => toggleItem("report", r)} sx={{ py: 0.5 }}>
+            <MenuItem
+              key={r}
+              onClick={() => toggleItem("report", r)}
+              sx={{ py: 0.5 }}
+            >
               <Checkbox
                 size="small"
                 checked={selections.reports.includes(r)}
