@@ -1,7 +1,6 @@
 // src/mock/mockApi.js
 export const getWeekTasks = () => ({
   week: [
-
     {
       date: "2025-11-12",
       tasks: [
@@ -15,7 +14,8 @@ export const getWeekTasks = () => ({
         //   taskType: "Change request",
         //   status: "Completed",
         //   updatedDate: "2025-11-09T09:45:00Z",
-        //   dailyAccomplishments: "Enhanced error logging and monitoring dashboard."
+        //   dailyAccomplishments:
+        //     "Enhanced error logging and monitoring dashboard.",
         // },
         {
           id: 8,
@@ -23,14 +23,16 @@ export const getWeekTasks = () => ({
           hours: 8,
           minutes: 20,
           ticketId: "TCK-1008",
-          colorCode: "#e8cffdff",
+          colorCode: "#ccfff7",
           taskType: "Issue",
           status: "Completed",
           updatedDate: "2025-11-09T16:20:00Z",
-          investigationRCA: "Email notifications failing intermittently. SMTP misconfiguration.",
-          resolutions: "Corrected SMTP settings and tested email workflow. Monitoring ongoing."
-        }
-      ]
+          investigationRCA:
+            "Email notifications failing intermittently. SMTP misconfiguration.",
+          resolutions:
+            "Corrected SMTP settings and tested email workflow. Monitoring ongoing.",
+        },
+      ],
     },
     {
       date: "2025-11-09",
@@ -45,7 +47,8 @@ export const getWeekTasks = () => ({
           taskType: "Change request",
           status: "Completed",
           updatedDate: "2025-11-09T09:45:00Z",
-          dailyAccomplishments: "Enhanced error logging and monitoring dashboard."
+          dailyAccomplishments:
+            "Enhanced error logging and monitoring dashboard.",
         },
         {
           id: 8,
@@ -57,10 +60,12 @@ export const getWeekTasks = () => ({
           taskType: "Issue",
           status: "Resolved",
           updatedDate: "2025-11-09T16:20:00Z",
-          investigationRCA: "Email notifications failing intermittently. SMTP misconfiguration.",
-          resolutions: "Corrected SMTP settings and tested email workflow. Monitoring ongoing."
-        }
-      ]
+          investigationRCA:
+            "Email notifications failing intermittently. SMTP misconfiguration.",
+          resolutions:
+            "Corrected SMTP settings and tested email workflow. Monitoring ongoing.",
+        },
+      ],
     },
     {
       date: "2025-11-08",
@@ -75,7 +80,8 @@ export const getWeekTasks = () => ({
           taskType: "Ticketless",
           status: "Completed",
           updatedDate: "2025-11-08T12:30:00Z",
-          dailyAccomplishments: "Optimized dashboard load time by reducing API calls."
+          dailyAccomplishments:
+            "Optimized dashboard load time by reducing API calls.",
         },
         {
           id: 6,
@@ -87,9 +93,10 @@ export const getWeekTasks = () => ({
           taskType: "New assignment",
           status: "In Progress",
           updatedDate: "2025-11-08T15:00:00Z",
-          dailyAccomplishments: "Started implementation of task filtering feature."
-        }
-      ]
+          dailyAccomplishments:
+            "Started implementation of task filtering feature.",
+        },
+      ],
     },
     {
       date: "2025-11-07",
@@ -104,10 +111,12 @@ export const getWeekTasks = () => ({
           taskType: "Issue",
           status: "Completed",
           updatedDate: "2025-11-07T14:45:00Z",
-          investigationRCA: "Incorrect calculation in timesheet module. Logic missed edge cases.",
-          resolutions: "Updated calculation logic and added unit tests. Validated results across multiple scenarios."
-        }
-      ]
+          investigationRCA:
+            "Incorrect calculation in timesheet module. Logic missed edge cases.",
+          resolutions:
+            "Updated calculation logic and added unit tests. Validated results across multiple scenarios.",
+        },
+      ],
     },
     {
       date: "2025-11-06",
@@ -122,9 +131,9 @@ export const getWeekTasks = () => ({
           taskType: "Change request",
           status: "Completed",
           updatedDate: "2025-11-06T10:15:00Z",
-          dailyAccomplishments: "Updated UI theme colors and typography."
-        }
-      ]
+          dailyAccomplishments: "Updated UI theme colors and typography.",
+        },
+      ],
     },
     {
       date: "2025-11-05",
@@ -139,7 +148,7 @@ export const getWeekTasks = () => ({
           taskType: "New assignment",
           status: "Completed",
           updatedDate: "2025-11-05T11:00:00Z",
-          dailyAccomplishments: "Created initial backend API endpoints"
+          dailyAccomplishments: "Created initial backend API endpoints",
         },
         {
           id: 2,
@@ -152,10 +161,12 @@ export const getWeekTasks = () => ({
           taskType: "Issue",
           status: "Resolved",
           updatedDate: "2025-11-05T15:30:00Z",
-          investigationRCA: "Database queries causing timeout. Index missing on user table.",
-          resolutions: "Added proper index to database. Monitored queries for stability."
-        }
-      ]
-    }
-  ]
+          investigationRCA:
+            "Database queries causing timeout. Index missing on user table.",
+          resolutions:
+            "Added proper index to database. Monitored queries for stability.",
+        },
+      ],
+    },
+  ],
 });

@@ -10,13 +10,12 @@ const getAuthHeaders = () => {
   };
 };
 
-export const TicketingSystemApi = {
+export const ModuleApi = {
   async view(page, pageSize) {
     try {
-      // Build URL dynamically based on params
-      let url = `${LOCAL_API}/ticketingSystem/view`;
+      // Build URL dynamically — add pagination only if provided
+      let url = `${LOCAL_API}/module/view`;
 
-      // Add pagination only if provided
       if (page !== undefined && pageSize !== undefined) {
         url += `?page=${page}&pagesize=${pageSize}`;
       }
@@ -25,7 +24,7 @@ export const TicketingSystemApi = {
       return response.data;
     } catch (error) {
       console.error(
-        "Error fetching Ticketing Systems:",
+        "Error fetching Modules:",
         error.response?.data || error.message
       );
       throw error;
@@ -34,15 +33,13 @@ export const TicketingSystemApi = {
 
   async create(data) {
     try {
-      const response = await axios.post(
-        `${LOCAL_API}/ticketingSystem/create/`,
-        data,
-        { headers: getAuthHeaders() }
-      );
+      const response = await axios.post(`${LOCAL_API}/module/create/`, data, {
+        headers: getAuthHeaders(),
+      });
       return response.data;
     } catch (error) {
       console.error(
-        "Error creating Ticketing System:",
+        "Error creating Modules:",
         error.response?.data || error.message
       );
       throw error;
@@ -51,19 +48,16 @@ export const TicketingSystemApi = {
 
   async edit(id, data) {
     try {
-      const response = await axios.put(
-        `${LOCAL_API}/ticketingSystem/edit/${id}`,
-        data,
-        { headers: getAuthHeaders() }
-      );
+      const response = await axios.put(`${LOCAL_API}/module/edit/${id}`, data, {
+        headers: getAuthHeaders(),
+      });
       return response.data;
     } catch (error) {
       console.error(
-        "Error editing Ticketing System:",
+        "Error editing Modules:",
         error.response?.data || error.message
       );
       throw error;
     }
   },
 };
-

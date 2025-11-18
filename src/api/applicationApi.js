@@ -31,11 +31,10 @@ export const ApplicationApi = {
     }
   },
 
-
   async create(data) {
     try {
       const response = await axios.post(
-        `${LOCAL_API}/application/create/`,
+        `${LOCAL_API}/application/create`,
         data,
         { headers: getAuthHeaders() }
       );
@@ -66,4 +65,3 @@ export const ApplicationApi = {
     }
   },
 };
-

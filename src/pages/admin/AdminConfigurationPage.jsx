@@ -25,45 +25,13 @@ import { Edit, X, ChevronDown } from "lucide-react"; // Lucide icons
 import { theme as customTheme } from "../../theme/theme";
 import Button from "../../components/common/Button";
 import Alert from "../../components/common/Alert";
-
-// Mock Data
-const mockApplications = [
-  { id: 1, name: "CRM Pro", description: "Customer Relationship Management" },
-  { id: 2, name: "HR Portal", description: "Human Resources System" },
-  { id: 3, name: "Finance Hub", description: "Financial Management Tool" },
-];
-
-const mockModules = [
-  {
-    id: 1,
-    applicationId: 1,
-    name: "Ticket Intake",
-    description: "Customer support tickets",
-  },
-  {
-    id: 2,
-    applicationId: 1,
-    name: "Escalation Workflow",
-    description: "Auto-escalate tickets",
-  },
-  {
-    id: 3,
-    applicationId: 2,
-    name: "Leave Request",
-    description: "Employee leave module",
-  },
-  {
-    id: 4,
-    applicationId: 3,
-    name: "Invoice Tracker",
-    description: "Track invoices",
-  },
-];
+import { ApplicationApi } from "../../api/applicationApi";
+import { ModuleApi } from "../../api/moduleApi";
 
 export default function AdminConfig() {
   const [activeTab, setActiveTab] = useState(0);
-  const [applications, setApplications] = useState(mockApplications);
-  const [modules, setModules] = useState(mockModules);
+  const [applications, setApplications] = useState([]);
+  const [modules, setModules] = useState([]);
   const [selectedAppId, setSelectedAppId] = useState("");
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -81,6 +49,34 @@ export default function AdminConfig() {
   const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
+    async function viewApplciaiton() {
+      try {
+        const viewApplications = await ApplicationApi.view();
+        setApplications(
+          viewApplications && viewApplications.rows?.length > 0
+            ? viewApplications?.rows
+            : []
+        );
+      } catch (err) {
+        setAlertOpen(err && err.message);
+      }
+    }
+
+    async function viewModules() {
+      try {
+        const viewModules = await ModuleApi.view();
+        setModules(
+          viewModules && viewModules.rows?.length > 0 ? viewModules?.rows : []
+        );
+      } catch (err) {
+        setAlertOpen(err && err.message);
+      }
+    }
+    viewApplciaiton();
+    viewModules();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 1 && applications.length > 0 && !selectedAppId) {
       setSelectedAppId(applications[0].id);
     }
@@ -90,12 +86,15 @@ export default function AdminConfig() {
     (app) => app.id === Number(selectedAppId)
   );
   const filteredModules = selectedAppId
-    ? modules.filter((m) => m.applicationId === Number(selectedAppId))
+    ? modules.filter((m) => m.app_id === Number(selectedAppId))
     : [];
+
+  console.log("filteredModules view___", filteredModules, selectedAppId);
 
   const handleTabChange = (e, newValue) => setActiveTab(newValue);
 
   const handleOpen = (item = null) => {
+    console.log("application___", item);
     if (activeTab === 1 && !selectedAppId && !item) {
       setAlertSeverity("warning");
       setAlertMessage("Please select an Application first.");
@@ -111,7 +110,7 @@ export default function AdminConfig() {
     setOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       setAlertSeverity("error");
       setAlertMessage("Name is required.");
@@ -128,6 +127,11 @@ export default function AdminConfig() {
               : a
           )
         );
+        const UpdateApplication = await ApplicationApi.edit(formData.id, {
+          applicationName: formData.name,
+          applicationDescription: formData.description,
+        });
+        console.log("Application Updated___", formData);
         setAlertMessage("Application updated!");
       } else {
         const newApp = {
@@ -135,6 +139,13 @@ export default function AdminConfig() {
           ...formData,
         };
         setApplications((prev) => [...prev, newApp]);
+
+        const createApi = await ApplicationApi.create({
+          applicationName: newApp.name,
+          applicationDescription: newApp.description,
+        });
+
+        console.log("Application Created___", newApp);
         setAlertMessage("Application created!");
       }
     } else {
@@ -146,6 +157,11 @@ export default function AdminConfig() {
               : m
           )
         );
+        const UpdateModule = await ModuleApi.edit(formData.id, {
+          moduleName: formData.name,
+          moduleDescription: formData.description,
+          appid: selectedAppId,
+        });
         setAlertMessage("Module updated!");
       } else {
         const newModule = {
@@ -154,7 +170,16 @@ export default function AdminConfig() {
           name: formData.name,
           description: formData.description,
         };
-        setModules((prev) => [...prev, newModule]);
+        const UpdateModule = await ModuleApi.create({
+          moduleName: formData.name,
+          moduleDescription: formData.description,
+          appid: selectedAppId,
+        });
+        const viewModule = await ModuleApi.view(1);
+        setModules(
+          viewModule && viewModule.rows?.length > 0 ? viewModule?.rows : []
+        );
+        // setModules((prev) => [...prev, newModule]);
         setAlertMessage(`Module added to ${selectedApplication?.name}!`);
       }
     }
@@ -183,7 +208,7 @@ export default function AdminConfig() {
     setDeleteConfirmOpen(false);
     setDeleteItem(null);
   };
-
+  console.log("filtered Modules___", filteredModules);
   const currentData = activeTab === 0 ? applications : filteredModules;
   const currentType = activeTab === 0 ? "Application" : "Module";
 
@@ -251,111 +276,116 @@ export default function AdminConfig() {
 
       {/* Application Dropdown (Same Style as WeekDropdown) */}
       {activeTab === 1 && (
-        <>
-        <Typography>Applications</Typography>
-        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-          
-          <div style={{ position: "relative", width: "260px" }}>
-            <button
-              onClick={() => setAppDropdownOpen(!appDropdownOpen)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: "0.65rem 1rem",
-                backgroundColor: customTheme.colors.surface,
-                color: customTheme.colors.text.primary,
-                border: `1px solid ${customTheme.colors.lightGray}`,
-                borderRadius: "0.5rem",
-                fontSize: "0.95rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: customTheme.transitions.fast,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  customTheme.colors.lightGray;
-                e.currentTarget.style.borderColor =
-                  customTheme.colors.mediumGray;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  customTheme.colors.surface;
-                e.currentTarget.style.borderColor =
-                  customTheme.colors.lightGray;
-              }}
-            >
-              <span
+        <Box sx={{ mb: 1, mr: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Box sx={{ mt: 1, mr: 1 }}>
+            <Typography>
+              {" "}
+              <strong>Applications :</strong>{" "}
+            </Typography>
+          </Box>
+
+          <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ position: "relative", width: "260px" }}>
+              <button
+                onClick={() => setAppDropdownOpen(!appDropdownOpen)}
                 style={{
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {selectedApplication?.name || "Select Application"}
-              </span>
-              <ChevronDown
-                size={18}
-                style={{ marginLeft: "8px", transition: "transform 0.2s" }}
-              />
-            </button>
-            {appDropdownOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 6px)",
-                  left: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   width: "100%",
+                  padding: "0.65rem 1rem",
                   backgroundColor: customTheme.colors.surface,
-                  borderRadius: "0.5rem",
-                  boxShadow: customTheme.shadows.large,
+                  color: customTheme.colors.text.primary,
                   border: `1px solid ${customTheme.colors.lightGray}`,
-                  zIndex: 1000,
-                  maxHeight: "200px",
-                  overflowY: "auto",
+                  borderRadius: "0.5rem",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: customTheme.transitions.fast,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    customTheme.colors.lightGray;
+                  e.currentTarget.style.borderColor =
+                    customTheme.colors.mediumGray;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    customTheme.colors.surface;
+                  e.currentTarget.style.borderColor =
+                    customTheme.colors.lightGray;
                 }}
               >
-                {applications.map((app) => (
-                  <button
-                    key={app.id}
-                    onClick={() => {
-                      setSelectedAppId(app.id);
-                      setAppDropdownOpen(false);
-                    }}
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "0.75rem 1rem",
-                      backgroundColor:
-                        selectedAppId === app.id
-                          ? customTheme.colors.lightGray
-                          : "transparent",
-                      border: "none",
-                      color: customTheme.colors.text.primary,
-                      fontWeight: selectedAppId === app.id ? 600 : 500,
-                      cursor: "pointer",
-                      transition: "background-color 0.2s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        customTheme.colors.lightGray)
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        selectedAppId === app.id
-                          ? customTheme.colors.lightGray
-                          : "transparent")
-                    }
-                  >
-                    {app.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+                <span
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {selectedApplication?.name || "Select Application"}
+                </span>
+                <ChevronDown
+                  size={18}
+                  style={{ marginLeft: "8px", transition: "transform 0.2s" }}
+                />
+              </button>
+              {appDropdownOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    width: "100%",
+                    backgroundColor: customTheme.colors.surface,
+                    borderRadius: "0.5rem",
+                    boxShadow: customTheme.shadows.large,
+                    border: `1px solid ${customTheme.colors.lightGray}`,
+                    zIndex: 1000,
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {applications.map((app) => (
+                    <button
+                      key={app.id}
+                      onClick={() => {
+                        setSelectedAppId(app.id);
+                        setAppDropdownOpen(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "0.75rem 1rem",
+                        backgroundColor:
+                          selectedAppId === app.id
+                            ? customTheme.colors.lightGray
+                            : "transparent",
+                        border: "none",
+                        color: customTheme.colors.text.primary,
+                        fontWeight: selectedAppId === app.id ? 600 : 500,
+                        cursor: "pointer",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          customTheme.colors.lightGray)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          selectedAppId === app.id
+                            ? customTheme.colors.lightGray
+                            : "transparent")
+                      }
+                    >
+                      {app.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Box>
         </Box>
-        </>
       )}
 
       {/* Table */}
@@ -414,8 +444,7 @@ export default function AdminConfig() {
               currentData.map((item) => {
                 const appName =
                   activeTab === 1
-                    ? applications.find((a) => a.id === item.applicationId)
-                        ?.name
+                    ? applications.find((a) => a.id === item.app_id)?.name
                     : null;
                 return (
                   <TableRow
@@ -426,6 +455,7 @@ export default function AdminConfig() {
                       },
                     }}
                   >
+                    {console.log("current date___", currentData)}
                     <TableCell sx={{ color: customTheme.colors.text.primary }}>
                       {item.name}
                     </TableCell>
@@ -455,12 +485,12 @@ export default function AdminConfig() {
                         >
                           <Edit size={18} color={customTheme.colors.primary} />
                         </IconButton>
-                        <IconButton
+                        {/* <IconButton
                           onClick={() => handleDeleteClick(item)}
                           size="small"
                         >
                           <X size={18} color={customTheme.colors.error} />
-                        </IconButton>
+                        </IconButton> */}
                       </div>
                     </TableCell>
                   </TableRow>
