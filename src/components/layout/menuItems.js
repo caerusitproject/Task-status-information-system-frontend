@@ -22,13 +22,13 @@ export const menuItems = [
     key: "timesheet",
    requiredRoles: ["USER", "MANAGER", "HR", "ADMIN"],
   },
-  {
-    path: "/task-management",
-    label: "Task Management",
-    icon: TaskIcon,
-    key: "task-management",
-    requiredRoles: ["USER", "MANAGER", "HR", "ADMIN"],
-  },
+  // {
+  //   path: "/task-management",
+  //   label: "Task Management",
+  //   icon: TaskIcon,
+  //   key: "task-management",
+  //   requiredRoles: ["USER", "MANAGER", "HR", "ADMIN"],
+  // },
   {
     path: "/admin-config",
     label: "Admin Config",

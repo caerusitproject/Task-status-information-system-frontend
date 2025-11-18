@@ -13,7 +13,7 @@ const Report =  lazy(() => import("../pages/report/GenerateReport"));
 // Lazy load pages
 const Home = lazy(() => import("../pages/home/Home"));
 const Timesheet = lazy(() => import("../pages/timesheet/Timesheet"));
-const TaskManagementApp = lazy(() => import("../pages/Task/Task"));
+//const TaskManagementApp = lazy(() => import("../pages/Task/Task"));
 const AppRoutes = () => {
   const { isAuthenticated ,user} = useAuth();
   return (
@@ -50,14 +50,6 @@ const AppRoutes = () => {
           >
            
 
-            <Route
-              path="task-management"
-              element={
-                <Suspense fallback={<CustomLoader />}>
-                  <TaskManagementApp />
-                </Suspense>
-              }
-            />
             <Route
               path="timesheet"
               element={
