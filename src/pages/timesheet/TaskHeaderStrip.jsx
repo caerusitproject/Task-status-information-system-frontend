@@ -360,8 +360,10 @@ export default function TaskHeaderStrip({
         onClose={closeMenu}
         PaperProps={{ sx: { minWidth: 180 } }}
       >
-        <MenuItem onClick={() => setMenuType("app")}>Application</MenuItem>
-        <MenuItem onClick={() => setMenuType("module")}>Module</MenuItem>
+        <MenuItem onClick={() => setMenuType("app")}>
+          Application / Module
+        </MenuItem>
+        {/* <MenuItem onClick={() => setMenuType("module")}>Module</MenuItem> */}
         <MenuItem onClick={() => setMenuType("report")}>Report</MenuItem>
       </Menu>
 

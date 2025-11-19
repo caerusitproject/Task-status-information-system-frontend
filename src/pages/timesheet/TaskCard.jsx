@@ -1,5 +1,5 @@
 // src/components/TaskCard.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Typography, IconButton, InputBase, Chip } from "@mui/material";
 import TextareaAutosize from "react-textarea-autosize";
 import { theme } from "../../theme/theme";
@@ -7,18 +7,35 @@ import AddIcon from "@mui/icons-material/Add";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import TaskHeaderStrip from "./TaskHeaderStrip";
+import { QueryApi } from "../../api/queryApi";
+import { Paper, List, ListItem, ListItemButton } from "@mui/material";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
+  Autocomplete,
   Button,
   Table,
   TableBody,
   TableRow,
   TableCell,
 } from "@mui/material";
+
+export function useDebounce(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebounced(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debounced;
+}
 
 export default function TaskCard({ task: initialTask, date, debouncedSave }) {
   const [task, setTask] = useState(initialTask);
@@ -42,14 +59,30 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
     resolutions,
     updatedDate,
   } = task;
-  console.log(task)
+  console.log(task);
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const debouncedQuery = useDebounce(query, 400);
   const [result, setResult] = useState("");
   const [showError, setShowError] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+
+  const fetchSuggestions = async (query) => {
+    if (!query.trim()) return;
+    const suggestions = await QueryApi.suggestionView(query);
+    setSuggestions(
+      suggestions && suggestions?.content?.length > 0
+        ? suggestions?.content
+        : []
+    );
+    console.log("useEffect__", suggestions.content);
+  };
+
+  console.log("view debounce__", suggestions);
   // ── put this right after the other useState hooks ──
   useEffect(() => {
     const styleId = `ck-style-${taskId}`;
@@ -85,6 +118,32 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
       el?.remove();
     };
   }, [colorCode, taskId]);
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`/api/search?query=${debouncedQuery}`);
+        const data = await res.json();
+        setSuggestions(data); // clean results only
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    setSuggestions([]); // clear old results immediately
+    fetchData();
+  }, [debouncedQuery]);
+
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      fetchSuggestions(debouncedQuery); // API fires only after user pauses input
+    }
+  }, [debouncedQuery]);
   //const showC = // if its not ewua
   const textAreaRows = 8;
 
@@ -581,7 +640,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
             }}
           >
             {/* SR Number Chip */}
-            { sr_no && (
+            {sr_no && (
               <Chip
                 label={`SR: ${task.sr_no}`}
                 sx={{
@@ -711,7 +770,10 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
 
       <Dialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => {
+          setDialogOpen(false);
+          setQuery("");
+        }}
         maxWidth="sm"
         fullWidth
         PaperProps={{
@@ -740,7 +802,92 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
 
         <DialogContent sx={{ pt: 4, pb: 2, px: 3 }}>
           {/* Query Field */}
-          <TextField
+          {/* <Autocomplete
+            freeSolo
+            options={suggestions} // your API suggestions
+            onInputChange={(e, val) => setQuery(val)}
+            onChange={(e, val) => val && setQuery(val)}
+            sx={{ width: "100%" }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Query (SQL / Logic)"
+                multiline
+                rows={5}
+                required
+                value={query}
+                InputLabelProps={{ style: { color: "#ccc" } }}
+                InputProps={{
+                  ...params.InputProps,
+                  style: { color: "#fff" },
+                }}
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "rgba(255,255,255,0.05)",
+                    "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(255,255,255,0.4)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.colors.primary || "#0066ff",
+                    },
+                    "&.Mui-error fieldset": { borderColor: "#ff6b6b" },
+                  },
+                }}
+              />
+            )}
+          /> */}
+
+          <Autocomplete
+            freeSolo
+            options={suggestions}
+            inputValue={inputValue} // ⭐ controls internal value
+            onInputChange={(e, val) => {
+              setInputValue(val); // update Autocomplete internal state
+              setQuery(val); // update your query state
+              fetchSuggestions(val); // call your debounced API
+            }}
+            onChange={(e, val) => {
+              if (val) {
+                setQuery(val);
+                setInputValue(val);
+              }
+            }}
+            sx={{ width: "100%" }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Query (SQL / Logic)"
+                multiline
+                rows={5}
+                required
+                InputLabelProps={{ style: { color: "#ccc" } }}
+                InputProps={{
+                  ...params.InputProps,
+                  style: { color: "#fff" },
+                }}
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "rgba(255,255,255,0.05)",
+                    "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(255,255,255,0.4)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.colors.primary || "#0066ff",
+                    },
+                    "&.Mui-error fieldset": { borderColor: "#ff6b6b" },
+                  },
+                }}
+              />
+            )}
+          />
+
+          {/* <TextField
             autoFocus
             label="Query (SQL / Logic)"
             required
@@ -771,7 +918,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
                 fontSize: "0.8rem",
               },
             }}
-          />
+          /> */}
 
           {/* Result Field */}
           <TextField
