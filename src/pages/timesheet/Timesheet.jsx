@@ -10,6 +10,7 @@ import TaskFormDialog from "./TaskFormDialog";
 import LegendPickerDialog from "./ColorPickerDialog";
 import { theme } from "../../theme/theme";
 import { Skeleton } from "@mui/material";
+import { ApplicationApi } from "../../api/applicationApi";
 
 const statusOptions = [
   "Reported",
@@ -70,70 +71,150 @@ export default function Timesheet() {
   const todayStr = new Date().toISOString().split("T")[0];
   const [todayIsInSelectedWeek, setTodayIsInSelectedWeek] = useState(false);
   const config = formConfig[taskType];
+  const [applications, setApplications] = useState([]); // real apps + modules
+  const [reports, setReports] = useState([]); // real reports list
+  const [loadingHeaderData, setLoadingHeaderData] = useState(true);
   // Add this inside Timesheet() before return
   const today = new Date().toISOString().split("T")[0]; // already have todayStr
   const debouncedSaveRef = useRef(null);
 
-  const debouncedSave = useCallback(
-    (Id, updateObj) => {
-      // Cancel previous
-      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
+  // const debouncedSave = useCallback(
+  //   (Id, updateObj) => {
+  //     // Cancel previous
+  //     if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
 
-      // Optimistic UI (camelCase, no extras)
-      const optimistic = {
-        ...updateObj,
+  //     // Optimistic UI (camelCase, no extras)
+  //     const optimistic = {
+  //       ...updateObj,
+  //       updatedDate: new Date().toISOString(),
+  //     };
+  //     setWeekData((prev) => ({
+  //       ...prev,
+  //       week: prev.week.map((day) =>
+  //         day.date === todayStr
+  //           ? {
+  //               ...day,
+  //               tasks: day.tasks.map((t) =>
+  //                 t.id === Id ? { ...t, ...optimistic } : t
+  //               ),
+  //             }
+  //           : day
+  //       ),
+  //     }));
+
+  //     // Schedule API (build exact snake_case payload)
+  //     debouncedSaveRef.current = setTimeout(async () => {
+  //       try {
+  //         const isIssue = updateObj.taskType?.toLowerCase() === "issue";
+  //         const payload = {
+  //           id: updateObj.id,
+  //           taskId: updateObj.taskId,
+  //           ticketId: updateObj.ticketId,
+  //           sr_no: updateObj.sr_no,
+  //           colorCode: updateObj.colorCode,
+  //           taskType: updateObj.taskType,
+  //           status: updateObj.status,
+  //           hour: updateObj.hours ?? "",
+  //           minute: updateObj.minutes ?? "",
+  //           updatedDate: optimistic.updatedDate,
+  //           ...(isIssue
+  //             ? {
+  //                 rca_investigation: updateObj.investigationRCA ?? "",
+  //                 resolution_and_steps: updateObj.resolutions ?? "",
+  //               }
+  //             : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
+  //           //             ...(updateObj.headerSelections && {
+  //           //   header_app: updateObj.headerSelections.app || "",
+  //           //   header_module: updateObj.headerSelections.module || "",
+  //           //   header_report: updateObj.headerSelections.report || "",
+  //           // }),
+  //         };
+  //         if (updateObj.applications !== undefined) {
+  //           payload.applications = updateObj.applications;
+  //         }
+  //         if (updateObj.reportName !== undefined) {
+  //           payload.reportName = updateObj.reportName;
+  //         }
+  //         await TaskApi.updateTask(payload.id, payload); // ← Uncomment this
+  //         //console.log("Expected api", payload.id, payload); // Keep for debugging
+  //       } catch (e) {
+  //         console.error("Auto-save failed", e);
+  //       }
+  //     }, 600);
+  //   },
+  //   [todayStr]
+  // );
+
+
+ const debouncedSave = useCallback((taskDbId, partialUpdate, date) => {
+  if (!taskDbId) return;
+
+  if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
+
+  debouncedSaveRef.current = setTimeout(async () => {
+    try {
+      // Find original task (works for any date, not just today)
+      let originalTask = null;
+      weekData.week.forEach(day => {
+        if (day.date === date) {
+          originalTask = day.tasks.find(t => t.id === taskDbId);
+        }
+      });
+
+      if (!originalTask) return;
+
+      const isIssue = originalTask.taskType?.toLowerCase() === "issue";
+
+      const payload = {
+        id: taskDbId,
+        taskId: originalTask.taskId,
+        ticketId: originalTask.ticketId ?? null,
+        sr_no: originalTask.sr_no ?? null,
+        colorCode: originalTask.colorCode,
+        taskType: originalTask.taskType,
+        status: partialUpdate.status ?? originalTask.status,
+        hour: partialUpdate.hours ?? originalTask.hours ?? "",
+        minute: partialUpdate.minutes ?? originalTask.minutes ?? "",
         updatedDate: new Date().toISOString(),
+        ...(isIssue
+          ? {
+              rca_investigation: partialUpdate.investigationRCA ?? originalTask.investigationRCA ?? "",
+              resolution_and_steps: partialUpdate.resolutions ?? originalTask.resolutions ?? "",
+            }
+          : {
+              daily_accomplishment: partialUpdate.dailyAccomplishments ?? originalTask.dailyAccomplishments ?? "",
+            }),
+        ...(partialUpdate.applications !== undefined && { applications: partialUpdate.applications }),
+        ...(partialUpdate.reportName !== undefined && { reportName: partialUpdate.reportName }),
       };
-      setWeekData((prev) => ({
+
+      console.log("SAVING →", payload);
+      await TaskApi.updateTask(taskDbId, payload);
+
+      // Optimistic update
+      setWeekData(prev => ({
         ...prev,
-        week: prev.week.map((day) =>
-          day.date === todayStr
+        week: prev.week.map(day => 
+          day.date === date
             ? {
                 ...day,
-                tasks: day.tasks.map((t) =>
-                  t.id === Id ? { ...t, ...optimistic } : t
-                ),
+                tasks: day.tasks.map(t =>
+                  t.id === taskDbId
+                    ? { ...t, ...partialUpdate, updatedDate: payload.updatedDate }
+                    : t
+                )
               }
             : day
-        ),
+        )
       }));
 
-      // Schedule API (build exact snake_case payload)
-      debouncedSaveRef.current = setTimeout(async () => {
-        try {
-          const isIssue = updateObj.taskType?.toLowerCase() === "issue";
-          const payload = {
-            id: updateObj.id,
-            taskId: updateObj.taskId,
-            ticketId: updateObj.ticketId,
-            sr_no: updateObj.sr_no,
-            colorCode: updateObj.colorCode,
-            taskType: updateObj.taskType,
-            status: updateObj.status,
-            hour: updateObj.hours ?? "",
-            minute: updateObj.minutes ?? "",
-            updatedDate: optimistic.updatedDate,
-            ...(isIssue
-              ? {
-                  rca_investigation: updateObj.investigationRCA ?? "",
-                  resolution_and_steps: updateObj.resolutions ?? "",
-                }
-              : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
-            //             ...(updateObj.headerSelections && {
-            //   header_app: updateObj.headerSelections.app || "",
-            //   header_module: updateObj.headerSelections.module || "",
-            //   header_report: updateObj.headerSelections.report || "",
-            // }),
-          };
-          await TaskApi.updateTask(payload.id, payload); // ← Uncomment this
-          //console.log("Expected api", payload.id, payload); // Keep for debugging
-        } catch (e) {
-          console.error("Auto-save failed", e);
-        }
-      }, 600);
-    },
-    [todayStr]
-  );
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+  }, 600);
+}, [weekData]);
+
+
   // === Mobile Detection ===
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -141,6 +222,28 @@ export default function Timesheet() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Load Applications + Reports ONCE when Timesheet mounts
+  useEffect(() => {
+    const loadHeaderData = async () => {
+      try {
+        setLoadingHeaderData(true);
+        const [appRes, reportRes] = await Promise.all([
+          ApplicationApi.view(), // → { rows: [{ id, name, module: [{id, name}] }] }
+          ApplicationApi.getReports(), // → { rows: [{ id, name }] }
+        ]);
+
+        setApplications(appRes.rows || []);
+        setReports(reportRes.rows || []);
+      } catch (err) {
+        console.error("Failed to load applications/reports", err);
+      } finally {
+        setLoadingHeaderData(false);
+      }
+    };
+
+    loadHeaderData();
+  }, []); // ← Runs only once on mount
 
   // === Load Legends & Colors ===
   const loadLegends = async () => {
@@ -497,6 +600,9 @@ export default function Timesheet() {
               isMobile={isMobile}
               showToday={todayIsInSelectedWeek}
               debouncedSave={debouncedSave}
+              applications={applications}
+              reports={reports}
+              loadingHeaderData={loadingHeaderData}
             />
           ))
         ) : (

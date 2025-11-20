@@ -11,6 +11,9 @@ export default function DayCard({
   isMobile,
   showToday,
   debouncedSave,
+  applications, // ← ADD
+  reports, // ← ADD
+  loadingHeaderData, // ← ADD
 }) {
   return (
     <Box
@@ -131,7 +134,14 @@ export default function DayCard({
                     index !== day.tasks.length - 1 ? "2px solid #fff" : "none",
                 }}
               >
-                <TaskCard task={task} date={day.date} debouncedSave={debouncedSave} />
+                <TaskCard
+                  task={task}
+                  date={day.date}
+                  debouncedSave={debouncedSave}
+                  applications={applications}
+                  reports={reports}
+                  loadingHeaderData={loadingHeaderData}
+                />
               </Box>
             ))}
           </Box>

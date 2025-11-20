@@ -37,9 +37,18 @@ export function useDebounce(value, delay = 400) {
   return debounced;
 }
 
-export default function TaskCard({ task: initialTask, date, debouncedSave }) {
+export default function TaskCard({
+  task: initialTask,
+  date,
+  debouncedSave,
+  applications,
+  reports,
+  loadingHeaderData,
+}) {
   const [task, setTask] = useState(initialTask);
-  //console.log("Tasks", task);
+  console.log("TaskCard received task:", initialTask);   // ← ADD THIS LINE
+  console.log("task.id =", initialTask.id);              // ← ADD THIS LINE
+  console.log("task.taskId =", initialTask.taskId);      // ← ADD THIS LINE
   useEffect(() => {
     setTask(initialTask);
   }, [initialTask]);
@@ -60,6 +69,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
     updatedDate,
   } = task;
   //console.log(task);
+
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
@@ -82,7 +92,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
     //console.log("useEffect__", suggestions.content);
   };
 
- // console.log("view debounce__", suggestions);
+  // console.log("view debounce__", suggestions);
   // ── put this right after the other useState hooks ──
   useEffect(() => {
     const styleId = `ck-style-${taskId}`;
@@ -159,13 +169,13 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
   const handleFieldChange = (field, value) => {
     const updated = { ...task, [field]: value };
     setTask(updated);
-    debouncedSave(task.id, updated); // Pass camelCase updated
+    debouncedSave(task.id, updated, date); // Pass camelCase updated
   };
 
   const handleStatus = (status) => {
     const updated = { ...task, status };
     setTask(updated);
-    debouncedSave(task.id, updated); // Pass camelCase updated
+    debouncedSave(task.id, updated, date); // Pass camelCase updated
   };
   const openQueryDialog = (setTask, task, debouncedSave) => {
     setQuery("");
@@ -297,11 +307,15 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
           {/* ---------- 1. Header strip (Investigation and RCA) ---------- */}
           <TaskHeaderStrip
             taskId={task.taskId}
+            taskDbId={task.id}
             date={date}
-            initialSelections={task.headerSelections || {}}
+            initialSelections={task}
             onHeaderChange={onHeaderChange}
             debouncedSave={debouncedSave}
             colorCode={colorCode}
+            applications={applications}
+            reports={reports}
+            loadingHeaderData={loadingHeaderData}
           />
 
           {/* ---------- 2. The coloured content area ---------- */}

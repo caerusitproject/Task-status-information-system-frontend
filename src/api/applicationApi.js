@@ -64,4 +64,38 @@ export const ApplicationApi = {
       throw error;
     }
   },
+
+
+   async getReports() {
+    try {
+        const response = await fetch(`${LOCAL_API}/report/view`, );
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error(
+          "Error fetching Reports:",
+          error.response?.data || error.message
+        );
+        throw error;
+      }
+    },
+
+    async postReports(data) {
+    try {
+         const response = await axios.post(
+        `${LOCAL_API}/report/create`,
+        data,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+      } catch (error) {
+        console.error(
+          "Error fetching Reports:",
+          error.response?.data || error.message
+        );
+        throw error;
+      }
+    },
 };

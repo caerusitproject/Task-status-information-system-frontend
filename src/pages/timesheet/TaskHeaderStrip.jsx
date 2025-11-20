@@ -8,91 +8,102 @@ import {
   MenuItem,
   TextField,
   Button,
-  Typography,
   Checkbox,
   ListItemText,
+  Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { theme } from "../../theme/theme";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-
-// Dummy + Dynamic Reports (will grow when user adds custom ones)
+import { ApplicationApi } from "../../api/applicationApi";
 
 export default function TaskHeaderStrip({
   taskId,
+  taskDbId,
   date,
   initialSelections = {},
   onHeaderChange,
   debouncedSave,
   colorCode,
+  applications = [],    // ← from Timesheet.jsx
+  reports = [],         // ← from Timesheet.jsx
+  loadingHeaderData = true,
 }) {
-  const baseDummyData = {
-    applications: ["Oracle", "Salesforce", "SAP"],
-    modulesByApp: {
-      Oracle: ["Users", "Roles", "Audit Logs"],
-      Salesforce: ["Leads", "Contacts", "Analytics"],
-      SAP: ["Finance", "Inventory", "HR"],
-    },
-    // modules: [
-    //   "User Management",
-    //   "Reports",
-    //   "Workflow",
-    //   "Notifications",
-    //   "Settings",
-    // ],
-    reports: [
-      "Daily Sales",
-      "User Activity",
-      "Error Log",
-      "Performance Report",
-      "Audit Trail",
-    ],
-  };
+
+  console.log("TaskHeaderStrip received taskDbId:", taskDbId);  // ← ADD THIS
+  console.log("TaskHeaderStrip received taskId:", taskId);
   const todayStr = new Date().toISOString().split("T")[0];
   const isToday = date === todayStr;
 
-  // Dynamic report list (starts with dummy + grows with custom entries)
-  const [dynamicReports, setDynamicReports] = useState([
-    // ...baseDummyData.reports,
-  ]);
-  const [submenuAnchor, setSubmenuAnchor] = useState(null);
-  const [selectedAppForModules, setSelectedAppForModules] = useState(null);
-
   const [selections, setSelections] = useState({
-    apps: Array.isArray(initialSelections.apps) ? initialSelections.apps : [],
-    modules: Array.isArray(initialSelections.modules)
-      ? initialSelections.modules
-      : [],
-    reports: Array.isArray(initialSelections.reports)
-      ? initialSelections.reports
-      : [],
+    apps: [],
+    modules: [],
+    reports: [],
   });
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const [menuType, setMenuType] = useState(""); // "app" | "module" | "report"
+  const [menuType, setMenuType] = useState(""); // "app" | "report"
+  const [submenuAnchor, setSubmenuAnchor] = useState(null);
+  const [selectedAppForModules, setSelectedAppForModules] = useState(null);
   const [reportInput, setReportInput] = useState("");
 
-  // const baseDummyData = {
-  //   applications: ["Oracle", "Salesforce", "SAP"],
-  //   modulesByApp: {
-  //     Oracle: ["Users", "Roles", "Audit Logs"],
-  //     Salesforce: ["Leads", "Contacts", "Analytics"],
-  //     SAP: ["Finance", "Inventory", "HR"],
-  //   },
-  // };
+  // Sync initialSelections from task (from backend)
+    // ── CORRECTLY READ BOTH OLD AND NEW BACKEND FORMATS ──
+  // ── PERFECTLY READS YOUR CURRENT BACKEND FORMAT ──
+useEffect(() => {
+  // Don't run while loading applications/reports
+  if (loadingHeaderData) return;
 
-  // Sync from parent
-  useEffect(() => {
-    setSelections({
-      apps: Array.isArray(initialSelections.apps) ? initialSelections.apps : [],
-      modules: Array.isArray(initialSelections.modules)
-        ? initialSelections.modules
-        : [],
-      reports: Array.isArray(initialSelections.reports)
-        ? initialSelections.reports
-        : [],
+  // CRITICAL FIX: Only run this effect ONCE when the task first loads
+  // After that, NEVER overwrite user's current selections (prevents flashing/disappearing)
+  if (selections.apps.length > 0 || selections.modules.length > 0 || selections.reports.length > 0) {
+    return;
+  }
+
+  const apps = [];
+  const modules = [];
+  const reports = [];
+
+  // === YOUR CURRENT BACKEND FORMAT (2025) ===
+  if (initialSelections.appName?.appName) {
+    apps.push(initialSelections.appName.appName);
+  }
+
+  if (Array.isArray(initialSelections.modulename)) {
+    initialSelections.modulename.forEach((m) => {
+      if (m.moduleName) modules.push(m.moduleName);
     });
-  }, [initialSelections]);
+  }
+
+  if (Array.isArray(initialSelections.reportName)) {
+    initialSelections.reportName.forEach((r) => {
+      if (typeof r === "object" && r.reportName) {
+        reports.push(r.reportName);
+      } else if (typeof r === "string") {
+        reports.push(r);
+      }
+    });
+  }
+
+  // === OLD FORMAT FALLBACK (for legacy data) ===
+  if (Array.isArray(initialSelections.apps)) {
+    apps.push(...initialSelections.apps.filter(Boolean));
+  }
+  if (Array.isArray(initialSelections.modules)) {
+    modules.push(...initialSelections.modules.filter(Boolean));
+  }
+  if (Array.isArray(initialSelections.reports)) {
+    reports.push(...initialSelections.reports.filter(Boolean));
+  }
+
+  // Only update if we actually found something
+  if (apps.length > 0 || modules.length > 0 || reports.length > 0) {
+    setSelections({
+      apps: [...new Set(apps)],
+      modules: [...new Set(modules)],
+      reports: [...new Set(reports)],
+    });
+  }
+}, [initialSelections?.updatedDate, loadingHeaderData]);
 
   const openMenu = (e) => {
     if (!isToday) return;
@@ -105,152 +116,112 @@ export default function TaskHeaderStrip({
     setReportInput("");
   };
 
-  const saveSelection = (newSel) => {
-    setSelections(newSel);
-    debouncedSave(taskId, { headerSelections: { ...newSel } }, date);
-    onHeaderChange?.(newSel);
-  };
-
-  // const toggleItem = (type, value) => {
-  //   const key =
-  //     type === "app" ? "apps" : type === "module" ? "modules" : "reports";
-  //   const current = selections[key];
-
-  //   const updated = current.includes(value)
-  //     ? current.filter((i) => i !== value)
-  //     : [...current, value];
-
-  //   saveSelection({ ...selections, [key]: updated });
-  // };
-
-  // const toggleItem = (type, value) => {
-  //   const key =
-  //     type === "app" ? "apps" : type === "module" ? "modules" : "reports";
-
-  //   const current = selections[key];
-
-  //   let updated;
-
-  //   if (type === "app") {
-  //     // App should ONLY be added, never removed automatically
-  //     if (!current.includes(value)) {
-  //       updated = [...current, value]; // add app
-  //     } else {
-  //       updated = current; // ❗ keep it selected even if clicked again OR modules unselect
-  //     }
-  //   } else {
-  //     // Normal toggle for modules and reports
-  //     updated = current.includes(value)
-  //       ? current.filter((i) => i !== value)
-  //       : [...current, value];
-  //   }
-
-  //   saveSelection({ ...selections, [key]: updated });
-  // };
-  const toggleItem = (type, value) => {
-    const newSelections = { ...selections };
-
-    if (type === "app") {
-      // Clicking an app: add it (user wants it), but it can be removed later if no modules
-      if (!newSelections.apps.includes(value)) {
-        newSelections.apps = [...newSelections.apps, value];
-      }
-      // Clicking again? Do nothing — can't manually deselect
-    } else if (type === "module") {
-      // Toggle module
-      const wasSelected = newSelections.modules.includes(value);
-      if (wasSelected) {
-        newSelections.modules = newSelections.modules.filter(
-          (m) => m !== value
-        );
-      } else {
-        newSelections.modules = [...newSelections.modules, value];
-      }
-
-      // Find parent app
-      let parentApp = null;
-      for (const [app, modules] of Object.entries(baseDummyData.modulesByApp)) {
-        if (modules.includes(value)) {
-          parentApp = app;
-          break;
-        }
-      }
-
-      if (parentApp) {
-        const appModules = baseDummyData.modulesByApp[parentApp];
-        const selectedCount = appModules.filter((m) =>
-          newSelections.modules.includes(m)
-        ).length;
-
-        // Rule: App must be selected ONLY if at least one module is selected
-        if (selectedCount > 0) {
-          if (!newSelections.apps.includes(parentApp)) {
-            newSelections.apps = [...newSelections.apps, parentApp];
-          }
-        } else {
-          // No modules selected → remove app, even if user clicked it earlier
-          newSelections.apps = newSelections.apps.filter(
-            (a) => a !== parentApp
-          );
-        }
-      }
-    } else if (type === "report") {
-      newSelections.reports = newSelections.reports.includes(value)
-        ? newSelections.reports.filter((r) => r !== value)
-        : [...newSelections.reports, value];
-    }
-
-    // Final cleanup: Remove any app that has zero selected modules
-    // This ensures consistency even if someone manually added an app with no modules
-    const validApps = newSelections.apps.filter((app) => {
-      const modules = baseDummyData.modulesByApp[app] || [];
-      return modules.some((m) => newSelections.modules.includes(m));
-    });
-
-    newSelections.apps = validApps;
-
-    saveSelection(newSelections);
-  };
-
-  const handleReportSave = () => {
-    const trimmed = reportInput.trim();
-    if (!trimmed) return;
-
-    // Add to dynamic list if not already there
-    if (!dynamicReports.includes(trimmed)) {
-      setDynamicReports((prev) => [...prev, trimmed]);
-    }
-
-    // Also select it
-    toggleItem("report", trimmed);
-    setReportInput("");
-  };
-
-  const handleDelete = (type, value) => {
-    const key =
-      type === "app" ? "apps" : type === "module" ? "modules" : "reports";
-    const updated = selections[key].filter((i) => i !== value);
-    saveSelection({ ...selections, [key]: updated });
-  };
-
   const closeSubMenu = () => {
     setSubmenuAnchor(null);
     setSelectedAppForModules(null);
   };
 
-  const openSubMenu = (event, app) => {
-    setSelectedAppForModules(app);
+  const isAppChecked = (appName) =>
+    selections.modules.some(mod =>
+      applications.find(a => a.name === appName)?.module.some(m => m.name === mod)
+    );
+
+  const toggleItem = (type, value) => {
+    const newSel = { ...selections };
+
+    if (type === "module") {
+      const idx = newSel.modules.indexOf(value);
+      if (idx > -1) {
+        newSel.modules.splice(idx, 1);
+      } else {
+        newSel.modules.push(value);
+      }
+
+      // Auto manage parent app
+      let parentApp = null;
+      for (const app of applications) {
+        if (app.module.some(m => m.name === value)) {
+          parentApp = app.name;
+          break;
+        }
+      }
+
+      if (parentApp) {
+        const appModules = applications.find(a => a.name === parentApp)?.module.map(m => m.name) || [];
+        const selectedCount = appModules.filter(m => newSel.modules.includes(m)).length;
+
+        if (selectedCount > 0 && !newSel.apps.includes(parentApp)) {
+          newSel.apps.push(parentApp);
+        } else if (selectedCount === 0) {
+          newSel.apps = newSel.apps.filter(a => a !== parentApp);
+        }
+      }
+    }
+
+    if (type === "report") {
+      const idx = newSel.reports.indexOf(value);
+      if (idx > -1) {
+        newSel.reports.splice(idx, 1);
+      } else {
+        newSel.reports.push(value);
+      }
+    }
+
+    setSelections(newSel);
+    saveToBackend(newSel);
+    onHeaderChange?.(newSel);
+  };
+
+  const saveToBackend = (newSel) => {
+  const payloadApplications = [];
+  newSel.apps.forEach(appName => {
+    const app = applications.find(a => a.name === appName);
+    if (app) {
+      const selectedModuleIds = newSel.modules
+        .map(modName => app.module.find(m => m.name === modName)?.id)
+        .filter(Boolean);
+      if (selectedModuleIds.length > 0) {
+        payloadApplications.push({
+          applicationId: app.id,
+          moduleIds: selectedModuleIds,
+        });
+      }
+    }
+  });
+
+  const payloadReportIds = newSel.reports
+    .map(name => reports.find(r => r.name === name)?.id)
+    .filter(Boolean);
+
+  // ← THIS LINE WAS WRONG → FIXED BELOW
+  debouncedSave(taskDbId, {                    // ← taskDbId (number, e.g., 3)
+    applications: payloadApplications.length > 0 ? payloadApplications : null,
+    reportName: payloadReportIds.length > 0 ? payloadReportIds : null,
+  }, date);
+};
+
+  const handleReportSave = async () => {
+    const trimmed = reportInput.trim();
+    if (!trimmed) return;
+
+    try {
+      await ApplicationApi.postReports({ reportName: trimmed });
+      // Optionally refetch reports from parent, or just add locally
+      toggleItem("report", trimmed);
+    } catch (err) {
+      alert("Failed to create report");
+    }
+    setReportInput("");
+    closeMenu();
+  };
+
+  const openSubMenu = (event, appName) => {
+    setSelectedAppForModules(appName);
     setSubmenuAnchor(event.currentTarget);
   };
 
-  const isAppChecked = (app) =>
-    selections.modules.some((mod) =>
-      baseDummyData?.modulesByApp[app]?.includes(mod)
-    );
-
   return (
     <>
-      {/* ────── YOUR ORIGINAL STYLE (UNCHANGED) ────── */}
       <Box
         sx={{
           display: "flex",
@@ -262,33 +233,17 @@ export default function TaskHeaderStrip({
           border: "1px solid #e0e0e0",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flexWrap: "wrap",
-          }}
-        >
-          <Typography
-            sx={{
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              color: "#f5f5f5",
-              mr: 0.5,
-            }}
-          >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "#f5f5f5", mr: 0.5 }}>
             Tages :
           </Typography>
 
-          {/* Multiple Apps */}
           {isToday &&
             selections.apps.map((app) => (
               <Chip
                 key={app}
                 label={app}
                 size="small"
-                onDelete={() => handleDelete("app", app)}
                 sx={{
                   bgcolor: colorCode,
                   color: "#000",
@@ -296,19 +251,17 @@ export default function TaskHeaderStrip({
                   borderRadius: "999px",
                   fontWeight: 600,
                   fontSize: "0.875rem",
-                  "& .MuiChip-deleteIcon": { color: "#000", opacity: 0.9 },
                 }}
               />
             ))}
 
-          {/* Multiple Modules */}
           {isToday &&
             selections.modules.map((mod) => (
               <Chip
                 key={mod}
                 label={mod}
                 size="small"
-                onDelete={() => handleDelete("module", mod)}
+                onDelete={() => toggleItem("module", mod)}
                 sx={{
                   bgcolor: colorCode,
                   color: "#000",
@@ -321,14 +274,13 @@ export default function TaskHeaderStrip({
               />
             ))}
 
-          {/* Multiple Reports */}
           {isToday &&
             selections.reports.map((rep) => (
               <Chip
                 key={rep}
                 label={rep}
                 size="small"
-                onDelete={() => handleDelete("report", rep)}
+                onDelete={() => toggleItem("report", rep)}
                 sx={{
                   bgcolor: colorCode,
                   color: "#000",
@@ -341,95 +293,34 @@ export default function TaskHeaderStrip({
               />
             ))}
         </Box>
-
-       {/* {isToday && ( */}
-          <IconButton
-            size="small"
-            onClick={openMenu}
-            sx={{ color: theme.colors.text.primary }}
-          >
-            <AddIcon fontSize="small" />
-          </IconButton>
-        {/* )} */}
+ {isToday &&(
+        <IconButton size="small" onClick={openMenu} sx={{ color: "#fff" }}>
+          <AddIcon fontSize="small" />
+        </IconButton>
+ )}
       </Box>
 
-      {/* ────── MAIN MENU ────── */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl) && menuType === ""}
-        onClose={closeMenu}
-        PaperProps={{ sx: { minWidth: 180 } }}
-      >
-        <MenuItem onClick={() => setMenuType("app")}>
-          Application / Module
-        </MenuItem>
-        {/* <MenuItem onClick={() => setMenuType("module")}>Module</MenuItem> */}
+      {/* Main Menu */}
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl) && menuType === ""} onClose={closeMenu}>
+        <MenuItem onClick={() => setMenuType("app")}>Application / Module</MenuItem>
         <MenuItem onClick={() => setMenuType("report")}>Report</MenuItem>
       </Menu>
 
-      {/* ────── APPLICATION (Beautiful Checkbox) ────── */}
-      {/* <Menu anchorEl={anchorEl} open={menuType === "app"} onClose={closeMenu}>
-        {baseDummyData.applications.map((app) => (
-          <MenuItem key={app} onClick={() => toggleItem("app", app)} sx={{ py: 0.5 }}>
-            <Checkbox
-              size="small"
-              checked={selections.apps.includes(app)}
-              sx={{
-                color: "#999",
-                "&.Mui-checked": { color: theme.colors.primary },
-              }}
-            />
-            <ListItemText primary={app} />
-          </MenuItem>
-        ))}
-      </Menu> */}
-
-      {/* ────── MODULE (Beautiful Checkbox) ────── */}
-      {/* <Menu anchorEl={anchorEl} open={menuType === "module"} onClose={closeMenu}>
-        {baseDummyData.modules.map((mod) => (
-          <MenuItem key={mod} onClick={() => toggleItem("module", mod)} sx={{ py: 0.5 }}>
-            <Checkbox
-              size="small"
-              checked={selections.modules.includes(mod)}
-              sx={{
-                color: "#999",
-                "&.Mui-checked": { color: theme.colors.primary },
-              }}
-            />
-            <ListItemText primary={mod} />
-          </MenuItem>
-        ))}
-      </Menu> */}
-
-      {/* ───── APPLICATION MENU ───── */}
+      {/* Application → Module Submenu */}
       <Menu anchorEl={anchorEl} open={menuType === "app"} onClose={closeMenu}>
-        {baseDummyData.applications.map((app) => (
+        {applications.map((app) => (
           <MenuItem
-            key={app}
+            key={app.id}
+            onClick={(e) => openSubMenu(e, app.name)}
             sx={{ py: 0.5 }}
-            onClick={(e) => {
-              toggleItem("app", app);
-              openSubMenu(e, app);
-            }} // <-- open submenu
           >
-            <Checkbox
-              size="small"
-              checked={isAppChecked(app)}
-              sx={{
-                color: "#999",
-                "&.Mui-checked": { color: theme.colors.primary },
-              }}
-            />
-            <ListItemText primary={app} />
-            <span style={{ marginLeft: "auto" }}>
-              <KeyboardArrowRightIcon />
-            </span>{" "}
-            {/* Right arrow */}
+            <Checkbox size="small" checked={isAppChecked(app.name)} />
+            <ListItemText primary={app.name} />
+            <KeyboardArrowRightIcon sx={{ ml: "auto" }} />
           </MenuItem>
         ))}
       </Menu>
 
-      {/* ───── MODULE SUBMENU (Loads modules for selected app) ───── */}
       <Menu
         anchorEl={submenuAnchor}
         open={Boolean(submenuAnchor)}
@@ -438,60 +329,33 @@ export default function TaskHeaderStrip({
         transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
         {selectedAppForModules &&
-          baseDummyData.modulesByApp[selectedAppForModules]?.map((mod) => (
-            <MenuItem
-              key={mod}
-              onClick={() => {
-                toggleItem("module", mod);
-                closeSubMenu();
-              }}
-              sx={{ py: 0.5 }}
-            >
-              <Checkbox
-                size="small"
-                checked={selections.modules.includes(mod)}
-                sx={{
-                  color: "#999",
-                  "&.Mui-checked": { color: theme.colors.primary },
+          applications
+            .find(a => a.name === selectedAppForModules)
+            ?.module.map((mod) => (
+              <MenuItem
+                key={mod.id}
+                onClick={() => {
+                  toggleItem("module", mod.name);
+                  closeSubMenu();
                 }}
-              />
-              <ListItemText primary={mod} />
-            </MenuItem>
-          ))}
+                sx={{ py: 0.5 }}
+              >
+                <Checkbox size="small" checked={selections.modules.includes(mod.name)} />
+                <ListItemText primary={mod.name} />
+              </MenuItem>
+            ))}
       </Menu>
 
-      {/* ────── REPORT (Dynamic List + Custom Input) ────── */}
-      <Menu
-        anchorEl={anchorEl}
-        open={menuType === "report"}
-        onClose={closeMenu}
-        PaperProps={{ sx: { width: 320 } }}
-      >
+      {/* Report Menu + Add New */}
+      <Menu anchorEl={anchorEl} open={menuType === "report"} onClose={closeMenu} PaperProps={{ sx: { width: 320 } }}>
         <Box sx={{ p: 1, maxHeight: 400, overflow: "auto" }}>
-          {/* <Typography variant="subtitle2" gutterBottom>
-            Select or add Report
-          </Typography> */}
-
-          {/* Dynamic Report List */}
-          {dynamicReports.map((r) => (
-            <MenuItem
-              key={r}
-              onClick={() => toggleItem("report", r)}
-              sx={{ py: 0.5 }}
-            >
-              <Checkbox
-                size="small"
-                checked={selections.reports.includes(r)}
-                sx={{
-                  color: "#999",
-                  "&.Mui-checked": { color: theme.colors.primary },
-                }}
-              />
-              <ListItemText primary={r} />
+          {reports.map((r) => (
+            <MenuItem key={r.id} onClick={() => toggleItem("report", r.name)} sx={{ py: 0.5 }}>
+              <Checkbox size="small" checked={selections.reports.includes(r.name)} />
+              <ListItemText primary={r.name} />
             </MenuItem>
           ))}
 
-          {/* Custom Report Input */}
           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
             <TextField
               size="small"
@@ -501,12 +365,7 @@ export default function TaskHeaderStrip({
               onKeyDown={(e) => e.stopPropagation()}
               fullWidth
             />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleReportSave}
-              disabled={!reportInput.trim()}
-            >
+            <Button variant="contained" size="small" onClick={handleReportSave} disabled={!reportInput.trim()}>
               Add
             </Button>
           </Box>
