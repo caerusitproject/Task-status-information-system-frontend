@@ -75,7 +75,7 @@ export default function Timesheet() {
   const debouncedSaveRef = useRef(null);
 
   const debouncedSave = useCallback(
-    (taskId, updateObj) => {
+    (Id, updateObj) => {
       // Cancel previous
       if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
 
@@ -91,7 +91,7 @@ export default function Timesheet() {
             ? {
                 ...day,
                 tasks: day.tasks.map((t) =>
-                  t.taskId === taskId ? { ...t, ...optimistic } : t
+                  t.id === Id ? { ...t, ...optimistic } : t
                 ),
               }
             : day
@@ -103,10 +103,10 @@ export default function Timesheet() {
         try {
           const isIssue = updateObj.taskType?.toLowerCase() === "issue";
           const payload = {
-            id:updateObj.id,
+            id: updateObj.id,
             taskId: updateObj.taskId,
             ticketId: updateObj.ticketId,
-            sr_no:updateObj.sr_no,
+            sr_no: updateObj.sr_no,
             colorCode: updateObj.colorCode,
             taskType: updateObj.taskType,
             status: updateObj.status,
@@ -119,13 +119,13 @@ export default function Timesheet() {
                   resolution_and_steps: updateObj.resolutions ?? "",
                 }
               : { daily_accomplishment: updateObj.dailyAccomplishments ?? "" }),
-  //             ...(updateObj.headerSelections && {
-  //   header_app: updateObj.headerSelections.app || "",
-  //   header_module: updateObj.headerSelections.module || "",
-  //   header_report: updateObj.headerSelections.report || "",
-  // }),
+            //             ...(updateObj.headerSelections && {
+            //   header_app: updateObj.headerSelections.app || "",
+            //   header_module: updateObj.headerSelections.module || "",
+            //   header_report: updateObj.headerSelections.report || "",
+            // }),
           };
-          await TaskApi.updateTask( payload.id, payload); // ← Uncomment this
+          await TaskApi.updateTask(payload.id, payload); // ← Uncomment this
           //console.log("Expected api", payload.id, payload); // Keep for debugging
         } catch (e) {
           console.error("Auto-save failed", e);
@@ -252,7 +252,7 @@ export default function Timesheet() {
         ticketId: legend.ticket_id,
         colorCode: legend.color_row,
         taskType: legend.task_type,
-        sr_no:legend.sr_no,
+        sr_no: legend.sr_no,
         status: legend.status,
         rca_investigation: "",
         resolution_and_steps: "",
@@ -276,8 +276,8 @@ export default function Timesheet() {
 
     try {
       // Send task to backend API
-     const response =  await TaskApi.createTask(taskId, newTask);
-     
+      const response = await TaskApi.createTask(taskId, newTask);
+
       //console.log(response?.content?.id)
       newTask.id = response?.content?.id;
       setWeekData((prev) => ({
@@ -352,7 +352,6 @@ export default function Timesheet() {
     let payload = {};
     if (taskType === "issue") {
       payload = {
-
         reported_by: formData.requestedBy,
         ticket_id: formData.ticketId,
         statement_of_the_issue: formData.description,

@@ -342,7 +342,7 @@ export default function TaskHeaderStrip({
             ))}
         </Box>
 
-        {isToday && (
+       {/* {isToday && ( */}
           <IconButton
             size="small"
             onClick={openMenu}
@@ -350,7 +350,7 @@ export default function TaskHeaderStrip({
           >
             <AddIcon fontSize="small" />
           </IconButton>
-        )}
+        {/* )} */}
       </Box>
 
       {/* ────── MAIN MENU ────── */}
@@ -412,7 +412,6 @@ export default function TaskHeaderStrip({
               openSubMenu(e, app);
             }} // <-- open submenu
           >
-            {console.log("checkbox___", selections)}
             <Checkbox
               size="small"
               checked={isAppChecked(app)}

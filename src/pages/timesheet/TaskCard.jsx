@@ -59,7 +59,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
     resolutions,
     updatedDate,
   } = task;
-  console.log(task);
+  //console.log(task);
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
@@ -79,10 +79,10 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
         ? suggestions?.content
         : []
     );
-    console.log("useEffect__", suggestions.content);
+    //console.log("useEffect__", suggestions.content);
   };
 
-  console.log("view debounce__", suggestions);
+ // console.log("view debounce__", suggestions);
   // ── put this right after the other useState hooks ──
   useEffect(() => {
     const styleId = `ck-style-${taskId}`;
@@ -159,13 +159,13 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
   const handleFieldChange = (field, value) => {
     const updated = { ...task, [field]: value };
     setTask(updated);
-    debouncedSave(task.taskId, updated); // Pass camelCase updated
+    debouncedSave(task.id, updated); // Pass camelCase updated
   };
 
   const handleStatus = (status) => {
     const updated = { ...task, status };
     setTask(updated);
-    debouncedSave(task.taskId, updated); // Pass camelCase updated
+    debouncedSave(task.id, updated); // Pass camelCase updated
   };
   const openQueryDialog = (setTask, task, debouncedSave) => {
     setQuery("");
@@ -200,7 +200,7 @@ export default function TaskCard({ task: initialTask, date, debouncedSave }) {
     // Update React state (this will update CKEditor content)
     const updatedTask = { ...task, [field]: newContent };
     setTask(updatedTask);
-    debouncedSave(task.taskId, updatedTask);
+    debouncedSave(task.id, updatedTask);
 
     // ——— THE IMPORTANT PART: move cursor after the table ———
     // correct cursor placement
