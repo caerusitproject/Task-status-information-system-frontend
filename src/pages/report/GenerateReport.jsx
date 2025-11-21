@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Paper, Tabs, Tab } from "@mui/material";
 import { theme as customTheme } from "../../theme/theme";
 
-import MonthlyReport from "./MonthlyReport";
+import TimeSheetReport from "./MonthlyReport";
 import WeeklyReport from "./WeeklyReport";
 import IndividualReport from "./IndividualReport";
 
@@ -16,7 +16,7 @@ export default function GenerateReport() {
   const renderContent = () => {
     switch (activeTab) {
       case 0:
-        return <MonthlyReport />;
+        return <TimeSheetReport />;
       case 1:
         return <WeeklyReport />;
       case 2:
@@ -52,7 +52,13 @@ export default function GenerateReport() {
       </Box> */}
 
       {/* Tabs */}
-      <Paper sx={{ mb: 2, borderRadius: customTheme.borderRadius.medium }}>
+      <Paper
+        sx={{
+          mb: 2,
+          borderRadius: customTheme.borderRadius.medium,
+          backgroundColor: customTheme.colors.surface,
+        }}
+      >
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -82,9 +88,9 @@ export default function GenerateReport() {
             },
           }}
         >
-          <Tab label="Monthly Report" />
-          <Tab label="Weekly Report" />
-          <Tab label="Individual Report" />
+          <Tab label="Time Sheet Report" />
+          <Tab disabled={true} label="Task Report" />
+          <Tab disabled={true} label="Individual Report" />
         </Tabs>
       </Paper>
 

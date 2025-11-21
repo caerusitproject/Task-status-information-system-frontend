@@ -10,13 +10,19 @@ import {
   Paper,
   Typography,
   Box,
+  TextField,
+  // Button,
 } from "@mui/material";
 import format from "date-fns/format";
 import { theme } from "../../theme/theme";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import CustomLoader from "../../components/common/CustomLoader";
-
+import { ReportExcelPdf } from "../../api/reportApi";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import MicrosoftIcon from "@mui/icons-material/Microsoft";
+// import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+// import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // Mock API Data - Full month data
 const mockFullMonthlyData = {
   duration: "November 2025",
@@ -74,6 +80,8 @@ const MonthlyReport = () => {
     duration: "",
     generatedOn: "",
   });
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Auto-select current month
   useEffect(() => {
@@ -177,41 +185,158 @@ const MonthlyReport = () => {
   return (
     <div>
       <Box
-      sx={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "flex-start" : "center",
-        justifyContent: "space-between",
-        gap: isMobile ? 1 : 2,
-        mb: 2,
-      }}
-    >
-      {/* Left side: Title + Duration */}
-      <Box>
-        <Typography variant="h5" fontWeight={600}>
-          Monthly Summary Report
-        </Typography>
-
-        {!loading && data?.duration && (
-          <Typography variant="body2" color="text.secondary">
-            Duration: {data.duration} | Generated On:{" "}
-            {format(new Date(data.generatedOn), "dd/MM/yyyy")}
+        sx={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "flex-start" : "center",
+          justifyContent: "space-between",
+          gap: isMobile ? 1 : 2,
+          mb: 2,
+        }}
+      >
+        {/* Left side: Title + Duration */}
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Time Sheet Report
           </Typography>
-        )}
-      </Box>
 
-      {/* Right side: Select Month */}
-      <Box sx={{ minWidth: isMobile ? "100%" : "33.33%" }}>
-        <Input
+          {!loading && data?.duration && (
+            <Typography variant="body2" color="text.secondary">
+              Duration: {data.duration} | Generated On:{" "}
+              {format(new Date(data.generatedOn), "dd/MM/yyyy")}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Right side: Select Month */}
+        <Box
+          sx={{
+            minWidth: isMobile ? "100%" : "18%",
+            display: "flex",
+            gap: "24px",
+          }}
+        >
+          <TextField
+            label="Start Date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{
+              width: 220,
+              background: "rgba(224, 212, 212, 0.15)",
+              color: "white",
+              backdropFilter: "blur(10px)",
+              borderRadius: "12px",
+              "& .MuiInputLabel-root": {
+                transform: "translate(14px, -8px) scale(0.85)",
+                color: "#1976d2", // blue label
+                fontWeight: 600,
+              },
+              "& .MuiInputLabel-shrink": {
+                color: "#1976d2 !important",
+              },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                "& fieldset": {
+                  height: "60px",
+                  borderColor: "#1976d2", // blue border
+                  borderWidth: "2px",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+              "& input": {
+                padding: "14px 12px 10px",
+                margin: "0 auto",
+                color: "white",
+              },
+            }}
+          />
+
+          <TextField
+            label="End Date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{
+              width: 220,
+              background: "rgba(224, 212, 212, 0.15)",
+              color: "white",
+              backdropFilter: "blur(10px)",
+              borderRadius: "12px",
+              "& .MuiInputLabel-root": {
+                transform: "translate(14px, -8px) scale(0.85)",
+                color: "#1976d2", // blue label
+                fontWeight: 600,
+              },
+              "& .MuiInputLabel-shrink": {
+                color: "#1976d2 !important",
+              },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                "& fieldset": {
+                  height: "60px",
+                  borderColor: "#1976d2", // blue border
+                  borderWidth: "2px",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+              "& input": {
+                padding: "14px 12px 10px",
+                margin: "0 auto",
+                color: "white",
+              },
+            }}
+          />
+          <Button
+            type="success"
+            size="large"
+            disabled={
+              startDate && endDate && startDate.length > 0 && endDate.length > 0
+                ? false
+                : true
+            }
+            onClick={async () => {
+              console.log("dates picker___", startDate, endDate);
+              await ReportExcelPdf.generateExcel(startDate, endDate);
+            }}
+          >
+            <div style={{ display: "flex", gap: "2px" }}>
+              <MicrosoftIcon />
+              <p style={{ marginTop: 3.5 }}>EXCEL</p>
+            </div>
+          </Button>
+          <Button size="large" type="error" disabled={true}>
+            <div style={{ display: "flex", gap: "2px" }}>
+              <PictureAsPdfIcon />
+              <p style={{ marginTop: 3.5 }}>PDF</p>
+            </div>
+          </Button>
+          {/* <Input
           label="Select Month"
           type="select"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
           options={months}
           required
-        />
+        /> */}
+        </Box>
       </Box>
-    </Box>
 
       {loading && (
         <div style={{ textAlign: "center", padding: theme.spacing.lg }}>
@@ -220,11 +345,50 @@ const MonthlyReport = () => {
       )}
       {!loading && (
         <>
-          <TableContainer
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              mt: 2,
+              gap: 2,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                // maxWidth: "600px",
+                padding: "15px 20px",
+                border: "1px solid #dcdcdc",
+                borderRadius: "8px",
+                backgroundColor: "#f8f9fa",
+                color: "#333",
+                marginTop: "15px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              <strong>Generate Your Reports</strong>
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "17px",
+                  lineHeight: "1.4",
+                }}
+              >
+                You can generate and preview your <b>PDF</b> or <b>Excel</b>{" "}
+                reports here. Click the appropriate button to download or
+                preview the report.
+              </p>
+            </div>
+          </Box>
+
+          {/* <TableContainer
             component={Paper}
             elevation={2}
             sx={{ borderRadius: 2, overflowX: "auto" }}
           >
+           
             <Table size={isMobile ? "small" : "medium"}>
               <TableHead>
                 <TableRow
@@ -334,8 +498,8 @@ const MonthlyReport = () => {
                 </TableRow>
               </TableBody>
             </Table>
-          </TableContainer>
-          <Box
+          </TableContainer> */}
+          {/* <Box
             sx={{
               display: "flex",
               justifyContent: "flex-end",
@@ -361,7 +525,7 @@ const MonthlyReport = () => {
             >
               {"Next >"}
             </Button>
-          </Box>
+          </Box> */}
         </>
       )}
     </div>
