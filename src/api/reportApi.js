@@ -15,7 +15,7 @@ export const ReportExcelPdf = {
   async generateExcel(startDate, endDate) {
     try {
       // Build URL dynamically — add pagination only if provided
-      let url = `${LOCAL_API}/report/generatePDFreport`;
+      let url = `${LOCAL_API}/report/generateExcelReport`;
 
       //   if (page !== undefined && pageSize !== undefined) {
       //     url += `?page=${page}&pagesize=${pageSize}`;
@@ -52,6 +52,36 @@ export const ReportExcelPdf = {
         error.response?.data || error.message
       );
       //   throw error;
+    }
+  },
+
+  async generatePDF(startDate, endDate) {
+    try {
+      let url = `${LOCAL_API}/report/generatePDFReport`;
+
+      const response = await axios.post(
+        url,
+        { startDate, endDate },
+        { responseType: "blob" } // ✅ IMPORTANT for PDF
+      );
+
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
+
+      const urlBlob = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = urlBlob;
+      link.setAttribute("download", "Timesheet Report.pdf");
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error(
+        "Error downloading PDF:",
+        error.response?.data || error.message
+      );
     }
   },
 

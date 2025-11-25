@@ -321,7 +321,19 @@ const MonthlyReport = () => {
               <p style={{ marginTop: 3.5 }}>EXCEL</p>
             </div>
           </Button>
-          <Button size="large" type="error" disabled={true}>
+          <Button
+            size="large"
+            type="error"
+            onClick={async () => {
+              console.log("dates picker___", startDate, endDate);
+              await ReportExcelPdf.generatePDF(startDate, endDate);
+            }}
+            disabled={
+              startDate && endDate && startDate.length > 0 && endDate.length > 0
+                ? false
+                : true
+            }
+          >
             <div style={{ display: "flex", gap: "2px" }}>
               <PictureAsPdfIcon />
               <p style={{ marginTop: 3.5 }}>PDF</p>
