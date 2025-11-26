@@ -46,9 +46,9 @@ export default function TaskCard({
   loadingHeaderData,
 }) {
   const [task, setTask] = useState(initialTask);
-  console.log("TaskCard received task:", initialTask);   // ← ADD THIS LINE
-  console.log("task.id =", initialTask.id);              // ← ADD THIS LINE
-  console.log("task.taskId =", initialTask.taskId);      // ← ADD THIS LINE
+  console.log("TaskCard received task:", initialTask); // ← ADD THIS LINE
+  console.log("task.id =", initialTask.id); // ← ADD THIS LINE
+  console.log("task.taskId =", initialTask.taskId); // ← ADD THIS LINE
   useEffect(() => {
     setTask(initialTask);
   }, [initialTask]);
@@ -70,7 +70,6 @@ export default function TaskCard({
   } = task;
   //console.log(task);
 
-
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -80,6 +79,7 @@ export default function TaskCard({
   const [result, setResult] = useState("");
   const [showError, setShowError] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  console.log("task all task___", task);
 
   const fetchSuggestions = async (query) => {
     if (!query.trim()) return;
@@ -639,6 +639,24 @@ export default function TaskCard({
               }}
             />
           </Box>
+
+          {task?.clientName && task?.clientName.length > 0 && (
+            <Chip
+              label={task?.clientName[0]?.clientName}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                px: 1.5,
+                py: 0.5,
+                mt: 2,
+                borderRadius: "999px",
+                fontSize: "0.75rem",
+                maxWidth: "100%",
+                width: "fit-content",
+                mx: "auto",
+              }}
+            />
+          )}
 
           {/* SR + Ticket + URC Buttons */}
           <Box

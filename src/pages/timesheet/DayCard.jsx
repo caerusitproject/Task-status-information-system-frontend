@@ -10,11 +10,13 @@ export default function DayCard({
   onAddTask,
   isMobile,
   showToday,
+  clients, // ← ADD
   debouncedSave,
   applications, // ← ADD
   reports, // ← ADD
   loadingHeaderData, // ← ADD
 }) {
+  console.log("day tasks___", day.tasks);
   return (
     <Box
       key={day.date}

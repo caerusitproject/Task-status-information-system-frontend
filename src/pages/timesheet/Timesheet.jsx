@@ -11,6 +11,8 @@ import LegendPickerDialog from "./ColorPickerDialog";
 import { theme } from "../../theme/theme";
 import { Skeleton } from "@mui/material";
 import { ApplicationApi } from "../../api/applicationApi";
+import { ClientApi } from "../../api/clientApi";
+import { set } from "react-hook-form";
 
 const statusOptions = [
   "Reported",
@@ -59,6 +61,7 @@ export default function Timesheet() {
     status: "Reported",
     color: "",
     taskId: null,
+    client_id: "0",
   });
   const [errors, setErrors] = useState({});
   const colorDropdownRef = useRef(null);
@@ -72,6 +75,7 @@ export default function Timesheet() {
   const [todayIsInSelectedWeek, setTodayIsInSelectedWeek] = useState(false);
   const config = formConfig[taskType];
   const [applications, setApplications] = useState([]); // real apps + modules
+  const [clients, setClients] = useState([]);
   const [reports, setReports] = useState([]); // real reports list
   const [loadingHeaderData, setLoadingHeaderData] = useState(true);
   // Add this inside Timesheet() before return
@@ -145,75 +149,90 @@ export default function Timesheet() {
   //   [todayStr]
   // );
 
+  const debouncedSave = useCallback(
+    (taskDbId, partialUpdate, date) => {
+      if (!taskDbId) return;
 
- const debouncedSave = useCallback((taskDbId, partialUpdate, date) => {
-  if (!taskDbId) return;
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
 
-  if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
-
-  debouncedSaveRef.current = setTimeout(async () => {
-    try {
-      // Find original task (works for any date, not just today)
-      let originalTask = null;
-      weekData.week.forEach(day => {
-        if (day.date === date) {
-          originalTask = day.tasks.find(t => t.id === taskDbId);
-        }
-      });
-
-      if (!originalTask) return;
-
-      const isIssue = originalTask.taskType?.toLowerCase() === "issue";
-
-      const payload = {
-        id: taskDbId,
-        taskId: originalTask.taskId,
-        ticketId: originalTask.ticketId ?? null,
-        sr_no: originalTask.sr_no ?? null,
-        colorCode: originalTask.colorCode,
-        taskType: originalTask.taskType,
-        status: partialUpdate.status ?? originalTask.status,
-        hour: partialUpdate.hours ?? originalTask.hours ?? "",
-        minute: partialUpdate.minutes ?? originalTask.minutes ?? "",
-        updatedDate: new Date().toISOString(),
-        ...(isIssue
-          ? {
-              rca_investigation: partialUpdate.investigationRCA ?? originalTask.investigationRCA ?? "",
-              resolution_and_steps: partialUpdate.resolutions ?? originalTask.resolutions ?? "",
+      debouncedSaveRef.current = setTimeout(async () => {
+        try {
+          // Find original task (works for any date, not just today)
+          let originalTask = null;
+          weekData.week.forEach((day) => {
+            if (day.date === date) {
+              originalTask = day.tasks.find((t) => t.id === taskDbId);
             }
-          : {
-              daily_accomplishment: partialUpdate.dailyAccomplishments ?? originalTask.dailyAccomplishments ?? "",
+          });
+
+          if (!originalTask) return;
+
+          const isIssue = originalTask.taskType?.toLowerCase() === "issue";
+
+          const payload = {
+            id: taskDbId,
+            taskId: originalTask.taskId,
+            ticketId: originalTask.ticketId ?? null,
+            sr_no: originalTask.sr_no ?? null,
+            colorCode: originalTask.colorCode,
+            taskType: originalTask.taskType,
+            status: partialUpdate.status ?? originalTask.status,
+            hour: partialUpdate.hours ?? originalTask.hours ?? "",
+            minute: partialUpdate.minutes ?? originalTask.minutes ?? "",
+            updatedDate: new Date().toISOString(),
+            ...(isIssue
+              ? {
+                  rca_investigation:
+                    partialUpdate.investigationRCA ??
+                    originalTask.investigationRCA ??
+                    "",
+                  resolution_and_steps:
+                    partialUpdate.resolutions ?? originalTask.resolutions ?? "",
+                }
+              : {
+                  daily_accomplishment:
+                    partialUpdate.dailyAccomplishments ??
+                    originalTask.dailyAccomplishments ??
+                    "",
+                }),
+            ...(partialUpdate.applications !== undefined && {
+              applications: partialUpdate.applications,
             }),
-        ...(partialUpdate.applications !== undefined && { applications: partialUpdate.applications }),
-        ...(partialUpdate.reportName !== undefined && { reportName: partialUpdate.reportName }),
-      };
+            ...(partialUpdate.reportName !== undefined && {
+              reportName: partialUpdate.reportName,
+            }),
+          };
 
-      console.log("SAVING →", payload);
-      await TaskApi.updateTask(taskDbId, payload);
+          console.log("SAVING →", payload);
+          await TaskApi.updateTask(taskDbId, payload);
 
-      // Optimistic update
-      setWeekData(prev => ({
-        ...prev,
-        week: prev.week.map(day => 
-          day.date === date
-            ? {
-                ...day,
-                tasks: day.tasks.map(t =>
-                  t.id === taskDbId
-                    ? { ...t, ...partialUpdate, updatedDate: payload.updatedDate }
-                    : t
-                )
-              }
-            : day
-        )
-      }));
-
-    } catch (err) {
-      console.error("Save failed:", err);
-    }
-  }, 600);
-}, [weekData]);
-
+          // Optimistic update
+          setWeekData((prev) => ({
+            ...prev,
+            week: prev.week.map((day) =>
+              day.date === date
+                ? {
+                    ...day,
+                    tasks: day.tasks.map((t) =>
+                      t.id === taskDbId
+                        ? {
+                            ...t,
+                            ...partialUpdate,
+                            updatedDate: payload.updatedDate,
+                          }
+                        : t
+                    ),
+                  }
+                : day
+            ),
+          }));
+        } catch (err) {
+          console.error("Save failed:", err);
+        }
+      }, 600);
+    },
+    [weekData]
+  );
 
   // === Mobile Detection ===
   useEffect(() => {
@@ -228,13 +247,15 @@ export default function Timesheet() {
     const loadHeaderData = async () => {
       try {
         setLoadingHeaderData(true);
-        const [appRes, reportRes] = await Promise.all([
+        const [appRes, reportRes, clientRes] = await Promise.all([
           ApplicationApi.view(), // → { rows: [{ id, name, module: [{id, name}] }] }
           ApplicationApi.getReports(), // → { rows: [{ id, name }] }
+          ClientApi.view(),
         ]);
 
         setApplications(appRes.rows || []);
         setReports(reportRes.rows || []);
+        setClients(clientRes.rows || []);
       } catch (err) {
         console.error("Failed to load applications/reports", err);
       } finally {
@@ -401,7 +422,7 @@ export default function Timesheet() {
       // alert("Error creating task. Please try again.");
     }
   };
-
+  console.log("week data___", weekData);
   const validateField = (name, value) => {
     const newErrors = { ...errors };
     delete newErrors[name];
@@ -423,6 +444,8 @@ export default function Timesheet() {
     });
     if (!formData.color) newErrors.color = "Color is required.";
     if (!formData.status) newErrors.status = "Status is required.";
+    if (!formData.client_id || formData.client_id === "0")
+      newErrors.client_id = "Client ID is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -461,6 +484,7 @@ export default function Timesheet() {
         status: formData.status,
         color_row: formData.color,
         sr_no: formData.srNo || "",
+        client_id: [Number(formData.client_id)] || [],
       };
     } else {
       payload = {
@@ -469,9 +493,10 @@ export default function Timesheet() {
         description: formData.description,
         status: formData.status,
         color_row: formData.color,
+        client_id: [Number(formData.client_id)] || [],
       };
     }
-
+    console.log("formData__", payload);
     try {
       if (formData.taskId) {
         await TaskApi.edit(formData.taskId, payload);
@@ -601,6 +626,7 @@ export default function Timesheet() {
               showToday={todayIsInSelectedWeek}
               debouncedSave={debouncedSave}
               applications={applications}
+              clients={clients}
               reports={reports}
               loadingHeaderData={loadingHeaderData}
             />
@@ -658,6 +684,9 @@ export default function Timesheet() {
         setColorOpen={setColorOpen}
         onStatusChange={(e) =>
           setFormData((prev) => ({ ...prev, status: e.target.value }))
+        }
+        onClientChange={(e) =>
+          setFormData((prev) => ({ ...prev, client_id: e.target.value }))
         }
         onSave={handleSave}
         onCancel={handleCancel}

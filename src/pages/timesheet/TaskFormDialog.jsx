@@ -1,6 +1,8 @@
+import React from "react";
 import { X, ChevronDown } from "lucide-react";
 import { theme } from "../../theme/theme";
-
+import { useEffect } from "react";
+import { ClientApi } from "../../api/clientApi";
 const inputStyle = {
   width: "100%",
   padding: "0.75rem",
@@ -34,10 +36,33 @@ export default function TaskFormDialog({
   onInputChange,
   onColorSelect,
   onStatusChange,
+  onClientChange,
   onSave,
   onCancel,
   setColorOpen,
 }) {
+  const [client, setClient] = React.useState([]);
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await ClientApi.view();
+        console.log("cleints view__", response);
+        let filteredClients =
+          response &&
+          response.rows.length > 0 &&
+          response.rows.map((client) => ({
+            id: client.id,
+            name: client.name,
+          }));
+        setClient(filteredClients);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+      }
+    };
+    fetchClients();
+  }, []);
+
   if (!open || !config) return null;
 
   return (
@@ -237,6 +262,59 @@ export default function TaskFormDialog({
                 {errors.ticketId}
               </p>
             )}
+          </div>
+
+          {/* client ID */}
+          <div style={{ marginBottom: "1rem" }}>
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  color: theme.colors.text.secondary,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Client ID {requiredStar}
+              </label>
+              <select
+                value={formData.client_id}
+                onChange={onClientChange}
+                style={{ ...inputStyle, cursor: "pointer" }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.primary;
+                  e.currentTarget.style.borderWidth = "0.125rem";
+                  e.currentTarget.style.backgroundColor = theme.colors.surface;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.lightGray;
+                  e.currentTarget.style.borderWidth = "0.1rem";
+                  e.currentTarget.style.backgroundColor =
+                    theme.colors.background;
+                }}
+              >
+                <option key="select" value="0">
+                  {"Select Client ID"}
+                </option>
+                {client.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </select>
+              {errors.client_id && (
+                <p
+                  style={{
+                    color: theme.colors.error,
+                    fontSize: "0.75rem",
+                    margin: "0.25rem 0 0 0",
+                  }}
+                >
+                  {errors.client_id}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* SR No */}

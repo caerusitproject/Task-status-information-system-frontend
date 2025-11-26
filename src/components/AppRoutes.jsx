@@ -5,17 +5,18 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import CustomLoader from "../components/common/CustomLoader";
 const Login = lazy(() => import("../pages/auth/Login"));
+const Register = lazy(() => import("../pages/auth/Register"));
 const MainLayout = lazy(() => import("./layout/MainLayout"));
 const NotFoundPage = lazy(() => import("./common/NotFoundPage"));
 const ProtectedRoute = lazy(() => import("./auth/ProtectedRoute"));
 const AdminConfig = lazy(() => import("../pages/admin/AdminConfigurationPage"));
-const Report =  lazy(() => import("../pages/report/GenerateReport"));
+const Report = lazy(() => import("../pages/report/GenerateReport"));
 // Lazy load pages
 const Home = lazy(() => import("../pages/home/Home"));
 const Timesheet = lazy(() => import("../pages/timesheet/Timesheet"));
 //const TaskManagementApp = lazy(() => import("../pages/Task/Task"));
 const AppRoutes = () => {
-  const { isAuthenticated ,user} = useAuth();
+  const { isAuthenticated, user } = useAuth();
   return (
     <div className="app">
       <Suspense fallback={<CustomLoader />}>
@@ -39,6 +40,21 @@ const AppRoutes = () => {
             }
           />
 
+          <Route
+            path="/register"
+            element={
+              isAuthenticated ? (
+                user?.role === "ADMIN" || user?.roles?.includes("ADMIN") ? (
+                  <Navigate to="/report" replace />
+                ) : (
+                  <Navigate to="/timesheet" replace />
+                )
+              ) : (
+                <Register />
+              )
+            }
+          />
+
           {/* Protected routes with nested layout */}
           <Route
             path="/"
@@ -48,8 +64,6 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           >
-           
-
             <Route
               path="timesheet"
               element={
@@ -90,7 +104,7 @@ const AppRoutes = () => {
                 <Login />
               )
             }
-          />  
+          />
         </Routes>
       </Suspense>
     </div>

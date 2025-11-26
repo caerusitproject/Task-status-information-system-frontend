@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginStart, loginSuccess } from "../../store/slices/authSlice";
 import { useAuth } from "../../hooks/useAuth";
+import { LoginRegisterApi } from "../../api/loginRegisterApi";
 import { storeAuthData } from "./authStorage";
 import { theme } from "../../theme/theme";
 import { validateEmail } from "../../config/utils";
-import { LoginRegisterApi } from "../../api/loginRegisterApi";
 import {
   Box,
   Typography,
@@ -19,10 +19,12 @@ import {
   useTheme as useMuiTheme,
 } from "@mui/material";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // For password visibility toggle
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // For confirm password visibility toggle
 
   const { login, isAuthenticated, user, loading, error } = useAuth();
   const dispatch = useDispatch();
@@ -39,26 +41,23 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) {
+      return;
+    }
     const obj = {
       emailId: email,
       password: password,
     };
-    const success = await LoginRegisterApi.loginUser(obj);
-    console.log("login data____", success);
+
+    const success = await LoginRegisterApi.registerUser(obj);
     if (success && success.status) {
-      localStorage.setItem("user", JSON.stringify(success.user));
-      localStorage.setItem("token", success?.token);
-      storeAuthData(success.data);
-      await login(success.user);
-      // const isAdmin =
-      //   success?.user.role?.includes("USER") || success?.user.role === "USER";
-      // navigate(isAdmin ? "/report" : "/timesheet", { replace: true });
+      navigate("/login", { replace: true });
     }
   };
 
   const validate = () => {
-    if (password.length === 0) {
-      alert("Password cannot be empty!");
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
       return false;
     }
     if ((email && !validateEmail(email)) || email?.length == 0) {
@@ -76,14 +75,21 @@ const Login = () => {
       email.length > 0 &&
       password &&
       password.length > 0 &&
+      confirmPassword &&
+      confirmPassword.length > 0 &&
       validate()
     ) {
       handleSubmit(e);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  const togglePasswordVisibility = (name) => {
+    console.log(name, "papaji__");
+    if (name === "password") {
+      setShowPassword(!showPassword);
+    } else if (name === "confirmPassword") {
+      setShowConfirmPassword(!showConfirmPassword);
+    }
   };
 
   return (
@@ -144,7 +150,7 @@ const Login = () => {
                 letterSpacing: "0.5px",
               }}
             >
-              Task Status Information System
+              Sign Up
             </Typography>
             {/* <Typography
               variant="body2"
@@ -209,10 +215,67 @@ const Login = () => {
 
             {/* Password Input */}
             <TextField
+              name="password"
               label="Password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              //   onKeyPress={handleKeyPress}
+              placeholder="Enter your password"
+              disabled={loading}
+              required
+              fullWidth
+              variant="outlined"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: theme.borderRadius.small,
+                  backgroundColor: theme.colors.white,
+                  "& fieldset": {
+                    borderColor: theme.colors.lightGray,
+                  },
+                  "&:hover fieldset": {
+                    borderColor: theme.colors.primary,
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: theme.colors.primary,
+                    borderWidth: 2,
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: theme.colors.text.primary,
+                  fontWeight: 500,
+                  letterSpacing: "0.2px",
+                  fontSize: { xs: "14px", sm: "18px" },
+                },
+                "& .MuiInputBase-input": {
+                  fontSize: { xs: "14px", sm: "16px" },
+                  color: theme.colors.text.primary,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <Button
+                    onClick={(e) => togglePasswordVisibility("password")}
+                    disabled={loading}
+                    sx={{
+                      minWidth: "auto",
+                      p: 0.5,
+                      color: theme.colors.text.secondary,
+                      "&:hover": { color: theme.colors.primary },
+                    }}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </Button>
+                ),
+              }}
+            />
+
+            <TextField
+              name="confirmPassword"
+              label="Confirm Password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Enter your password"
               disabled={loading}
@@ -248,7 +311,7 @@ const Login = () => {
               InputProps={{
                 endAdornment: (
                   <Button
-                    onClick={togglePasswordVisibility}
+                    onClick={(e) => togglePasswordVisibility("confirmPassword")}
                     disabled={loading}
                     sx={{
                       minWidth: "auto",
@@ -257,7 +320,7 @@ const Login = () => {
                       "&:hover": { color: theme.colors.primary },
                     }}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    {showConfirmPassword ? "Hide" : "Show"}
                   </Button>
                 ),
               }}
@@ -310,9 +373,9 @@ const Login = () => {
               {loading ? (
                 <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
               ) : null}
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? "Signing Up..." : "Sign Up"}
             </Button>
-            <Link to="/register" style={{ textDecoration: "none" }}>
+            <Link to="/login" style={{ textDecoration: "none" }}>
               <Typography
                 sx={{
                   mt: 2,
@@ -325,7 +388,7 @@ const Login = () => {
                   },
                 }}
               >
-                Register a new account
+                Already have an account? Log in
               </Typography>
             </Link>
           </Box>
@@ -337,4 +400,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
