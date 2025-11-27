@@ -3,8 +3,10 @@ import axios from "axios";
 const LOCAL_API = "http://localhost:3000/api";
 
 const getAuthHeaders = () => {
+  const token = localStorage.getItem("token") || "";
   return {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
   };
 };
 

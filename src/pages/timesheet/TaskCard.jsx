@@ -8,6 +8,7 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import TaskHeaderStrip from "./TaskHeaderStrip";
 import { QueryApi } from "../../api/queryApi";
+import { ClientApi } from "../../api/clientApi";
 import { Paper, List, ListItem, ListItemButton } from "@mui/material";
 import {
   Dialog,
@@ -67,8 +68,10 @@ export default function TaskCard({
     investigationRCA,
     resolutions,
     updatedDate,
+    client_id,
   } = task;
-  //console.log(task);
+  // console.log(task);
+  console.log("client_id:", client_id);
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
@@ -79,6 +82,7 @@ export default function TaskCard({
   const [result, setResult] = useState("");
   const [showError, setShowError] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [clientName1, setClientName1] = useState("");
   console.log("task all task___", task);
 
   const fetchSuggestions = async (query) => {
@@ -97,6 +101,22 @@ export default function TaskCard({
   useEffect(() => {
     const styleId = `ck-style-${taskId}`;
     const existing = document.getElementById(styleId);
+
+    const fetchClientName = async (client_id) => {
+      try {
+        const response = await ClientApi.view();
+        const fetchName = await response.rows?.find(
+          (client) => client.id === Number(client_id)
+        );
+        setClientName1(fetchName?.name || "");
+        console.log("names____", client_id, fetchName?.name || "");
+      } catch (error) {
+        console.error("Error fetching client name:", error);
+        return null;
+      }
+    };
+
+    fetchClientName(client_id ? client_id : "");
     if (existing) existing.remove();
 
     const style = document.createElement("style");
@@ -640,9 +660,9 @@ export default function TaskCard({
             />
           </Box>
 
-          {task?.clientName && task?.clientName.length > 0 && (
+          {clientName1 && clientName1 !== "" && (
             <Chip
-              label={task?.clientName[0]?.clientName}
+              label={clientName1}
               sx={{
                 bgcolor: "#000",
                 color: "#fff",

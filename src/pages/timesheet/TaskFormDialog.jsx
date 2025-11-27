@@ -281,7 +281,12 @@ export default function TaskFormDialog({
               <select
                 value={formData.client_id}
                 onChange={onClientChange}
-                style={{ ...inputStyle, cursor: "pointer" }}
+                readOnly={!!formData.client_id}
+                style={{
+                  ...inputStyle,
+                  opacity: formData.taskId ? 0.6 : 1,
+                  cursor: formData.taskId ? "not-allowed" : "text",
+                }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = theme.colors.primary;
                   e.currentTarget.style.borderWidth = "0.125rem";

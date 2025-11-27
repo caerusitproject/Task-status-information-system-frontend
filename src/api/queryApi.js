@@ -2,11 +2,11 @@ import axios from "axios";
 
 const LOCAL_API = "http://localhost:3000/api";
 
-// ✅ Always get latest token for Authorization header
 const getAuthHeaders = () => {
-  //const token = getCookie("accessToken");
+  const token = localStorage.getItem("token") || "";
   return {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
   };
 };
 

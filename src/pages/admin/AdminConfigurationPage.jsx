@@ -27,11 +27,13 @@ import Button from "../../components/common/Button";
 import Alert from "../../components/common/Alert";
 import { ApplicationApi } from "../../api/applicationApi";
 import { ModuleApi } from "../../api/moduleApi";
+import { ClientApi } from "../../api/clientApi";
 
 export default function AdminConfig() {
   const [activeTab, setActiveTab] = useState(0);
   const [applications, setApplications] = useState([]);
   const [modules, setModules] = useState([]);
+  const [clients, setClients] = useState([]);
   const [selectedAppId, setSelectedAppId] = useState("");
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -72,8 +74,20 @@ export default function AdminConfig() {
         setAlertOpen(err && err.message);
       }
     }
+    async function viewClients() {
+      try {
+        const viewClients = await ClientApi.view();
+        setClients(
+          viewClients && viewClients.rows?.length > 0 ? viewClients?.rows : []
+        );
+      } catch (err) {
+        setAlertOpen(err && err.message);
+      }
+    }
+
     viewApplciaiton();
     viewModules();
+    viewClients();
   }, []);
 
   useEffect(() => {
@@ -89,7 +103,11 @@ export default function AdminConfig() {
     ? modules.filter((m) => m.app_id === Number(selectedAppId))
     : [];
 
-  console.log("filteredModules view___", filteredModules, selectedAppId);
+  const selectedClient = clients.find(
+    (client) => client.id === Number(selectedAppId)
+  );
+
+  // console.log("filteredModules view___", filteredModules, selectedAppId);
 
   const handleTabChange = (e, newValue) => setActiveTab(newValue);
 
@@ -148,7 +166,7 @@ export default function AdminConfig() {
         console.log("Application Created___", newApp);
         setAlertMessage("Application created!");
       }
-    } else {
+    } else if (activeTab === 1) {
       if (formData.id) {
         setModules((prev) =>
           prev.map((m) =>
@@ -182,6 +200,55 @@ export default function AdminConfig() {
         // setModules((prev) => [...prev, newModule]);
         setAlertMessage(`Module added to ${selectedApplication?.name}!`);
       }
+    } else {
+      if (formData.id) {
+        // ---- UPDATE CLIENT ----
+        try {
+          const updateRes = await ClientApi.edit(formData.id, {
+            name: formData.name,
+            description: formData.description,
+          });
+
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === formData.id
+                ? {
+                    ...c,
+                    name: formData.name,
+                    description: formData.description,
+                  }
+                : c
+            )
+          );
+
+          setAlertSeverity("success");
+          setAlertMessage("Client updated!");
+        } catch (err) {
+          setAlertSeverity("error");
+          setAlertMessage(err?.message || "Error updating client");
+        }
+      } else {
+        // ---- CREATE CLIENT ----
+        try {
+          const createRes = await ClientApi.create({
+            name: formData.name,
+            description: formData.description,
+          });
+
+          // Fetch updated list (LIKE YOU ALREADY DO IN MODULE CREATE)
+          const refreshed = await ClientApi.view();
+
+          setClients(
+            refreshed && refreshed.rows?.length > 0 ? refreshed.rows : []
+          );
+
+          setAlertSeverity("success");
+          setAlertMessage("Client created!");
+        } catch (err) {
+          setAlertSeverity("error");
+          setAlertMessage(err?.message || "Error creating client");
+        }
+      }
     }
 
     setAlertSeverity("success");
@@ -209,8 +276,15 @@ export default function AdminConfig() {
     setDeleteItem(null);
   };
   console.log("filtered Modules___", filteredModules);
-  const currentData = activeTab === 0 ? applications : filteredModules;
-  const currentType = activeTab === 0 ? "Application" : "Module";
+  // const currentData = activeTab === 0 ? applications : filteredModules;
+  const currentData =
+    activeTab === 0
+      ? applications
+      : activeTab === 1
+      ? filteredModules
+      : clients;
+  const currentType =
+    activeTab === 0 ? "Application" : activeTab === 1 ? "Module" : "Client";
 
   return (
     <div>
@@ -271,6 +345,7 @@ export default function AdminConfig() {
         >
           <Tab label="Applications" />
           <Tab label="Modules" />
+          <Tab label="Clients" />
         </Tabs>
       </Paper>
 

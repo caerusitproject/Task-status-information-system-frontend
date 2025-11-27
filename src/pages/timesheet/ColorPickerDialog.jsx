@@ -25,17 +25,17 @@ export default function LegendPickerDialog({
         onClose={onClose}
         maxWidth="xs"
         PaperProps={{
-        sx: {
-          width: { xs: 320, sm: 540 },
-          height: { xs: 380, sm: 450 },
-          maxWidth: "none",
-          bgcolor: "#1a1a1a",
-          color: "#fff",
-          borderRadius: 3,
-          boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
-          m: 0,
-        },
-      }}
+          sx: {
+            width: { xs: 320, sm: 540 },
+            height: { xs: 380, sm: 450 },
+            maxWidth: "none",
+            bgcolor: "#1a1a1a",
+            color: "#fff",
+            borderRadius: 3,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+            m: 0,
+          },
+        }}
       >
         <DialogTitle
           sx={{ bgcolor: "#222", color: "#fff", fontSize: "1rem", pb: 2 }}
@@ -49,31 +49,31 @@ export default function LegendPickerDialog({
           </IconButton>
         </DialogTitle>
         <DialogContent
-        sx={{
-          background: {
-            xs: "rgba(255, 255, 255, 0.1)",
-            md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
-          },
-          backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
-          WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
-          border: {
-            xs: "1px solid rgba(255,255,255,0.1)",
-            md: "1px solid rgba(255,255,255,0.2)",
-          },
-          boxShadow: {
-            xs: "0 4px 16px rgba(0,0,0,0.1)",
-            md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
-          },
-          p: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 2,
-          height: "100%",
-          pb: 3,
-        }}
-      >
+          sx={{
+            background: {
+              xs: "rgba(255, 255, 255, 0.1)",
+              md: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
+            },
+            backdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+            WebkitBackdropFilter: { xs: "blur(6px)", md: "blur(10px)" },
+            border: {
+              xs: "1px solid rgba(255,255,255,0.1)",
+              md: "1px solid rgba(255,255,255,0.2)",
+            },
+            boxShadow: {
+              xs: "0 4px 16px rgba(0,0,0,0.1)",
+              md: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)",
+            },
+            p: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 2,
+            height: "100%",
+            pb: 3,
+          }}
+        >
           <Typography color="#aaa">No active tasks available.</Typography>
         </DialogContent>
       </Dialog>
@@ -171,6 +171,7 @@ export default function LegendPickerDialog({
             // Then, ticket_less ones
             ...legends.filter((legend) => legend.task_type === "ticket_less"),
           ].map((legend) => {
+            console.log("legend___", legend);
             const { color_row: code, task_code: task_id, task_type } = legend;
             const isSelected = selectedColor === code;
 

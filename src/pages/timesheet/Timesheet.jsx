@@ -401,9 +401,13 @@ export default function Timesheet() {
     try {
       // Send task to backend API
       const response = await TaskApi.createTask(taskId, newTask);
-
+      const view = await TaskApi.weekTasks(
+        selectedWeek.startDate,
+        selectedWeek.endDate
+      );
       //console.log(response?.content?.id)
       newTask.id = response?.content?.id;
+      newTask.client_id = response?.content?.client_id;
       setWeekData((prev) => ({
         ...prev,
         week: prev.week.map((day) =>
@@ -543,6 +547,7 @@ export default function Timesheet() {
         status: taskDetails.status || "In Progress",
         color: legend.color_row,
         taskId: taskDetails.task_code,
+        client_id: taskDetails.client_id ? String(taskDetails.client_id) : "0",
       });
 
       setTaskType(type);
