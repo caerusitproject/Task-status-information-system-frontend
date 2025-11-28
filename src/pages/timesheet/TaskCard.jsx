@@ -660,23 +660,25 @@ export default function TaskCard({
             />
           </Box>
 
-          {clientName1 && clientName1 !== "" && (
-            <Chip
-              label={clientName1}
-              sx={{
-                bgcolor: "#000",
-                color: "#fff",
-                px: 1.5,
-                py: 0.5,
-                mt: 2,
-                borderRadius: "999px",
-                fontSize: "0.75rem",
-                maxWidth: "100%",
-                width: "fit-content",
-                mx: "auto",
-              }}
-            />
-          )}
+          {Array.isArray(task.clientName) &&
+            task.clientName.length > 0 &&
+            task.clientName[0]?.clientName?.trim() && (
+              <Chip
+                label={task.clientName[0]?.clientName}
+                sx={{
+                  bgcolor: "#000",
+                  color: "#fff",
+                  px: 1.5,
+                  py: 0.5,
+                  mt: 2,
+                  borderRadius: "999px",
+                  fontSize: "0.75rem",
+                  maxWidth: "100%",
+                  width: "fit-content",
+                  mx: "auto",
+                }}
+              />
+            )}
 
           {/* SR + Ticket + URC Buttons */}
           <Box

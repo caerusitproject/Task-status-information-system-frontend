@@ -401,13 +401,16 @@ export default function Timesheet() {
     try {
       // Send task to backend API
       const response = await TaskApi.createTask(taskId, newTask);
-      const view = await TaskApi.weekTasks(
-        selectedWeek.startDate,
-        selectedWeek.endDate
-      );
       //console.log(response?.content?.id)
+      const fetchAllClients = await ClientApi.view();
+      let fetchNameClinet = fetchAllClients.rows.find(
+        (client) => client.id === Number(response?.content?.client_id)
+      );
+      console.log("buddhi___", fetchNameClinet);
       newTask.id = response?.content?.id;
-      newTask.client_id = response?.content?.client_id;
+      newTask.clientName = [
+        { id: fetchNameClinet?.id, clientName: fetchNameClinet?.name },
+      ]; // TEMPORARY FIX
       setWeekData((prev) => ({
         ...prev,
         week: prev.week.map((day) =>
