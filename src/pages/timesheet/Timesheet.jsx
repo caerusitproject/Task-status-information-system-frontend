@@ -558,7 +558,7 @@ export default function Timesheet() {
       setMenuOpen(false);
     } catch (err) {
       console.error("Failed to load task:", err);
-      alert("Could not load task details.");
+      //alert("Could not load task details.");
     }
   };
 
