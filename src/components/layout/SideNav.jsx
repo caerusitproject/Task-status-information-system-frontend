@@ -171,7 +171,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                   marginRight: theme.spacing.md,
                 }}
               >
-                {user.name?.charAt(0).toUpperCase() || "U"}
+                {user.email?.charAt(0).toUpperCase() || "U"}
               </div>
               <div>
                 <div
@@ -182,14 +182,14 @@ const SideNav = ({ collapsed, onToggle }) => {
                 >
                   {user.email}
                 </div>
-                <div
+                {/* <div
                   style={{
                     fontSize: "12px",
                     color: theme.colors.text.secondary,
                   }}
                 >
                   Role: {user.role === "USER" ? "Employee" : user.role || "N/A"}
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
