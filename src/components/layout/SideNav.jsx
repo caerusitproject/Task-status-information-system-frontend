@@ -182,14 +182,14 @@ const SideNav = ({ collapsed, onToggle }) => {
                 >
                   {user.email}
                 </div>
-                {/* <div
+                <div
                   style={{
                     fontSize: "12px",
                     color: theme.colors.text.secondary,
                   }}
                 >
                   Role: {user.role === "USER" ? "Employee" : user.role || "N/A"}
-                </div> */}
+                </div>
               </div>
             </div>
           </div>

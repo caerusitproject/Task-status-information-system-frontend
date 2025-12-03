@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setIsAuthenticated(false);
     setUser(null);
-    console.log("logout__", JSON.parse(savedUser)?.email);
+    //console.log("logout__", JSON.parse(savedUser)?.email);
     await LoginRegisterApi.logoutUser(JSON.parse(savedUser)?.email); // Call logout API
     localStorage.clear();
   };

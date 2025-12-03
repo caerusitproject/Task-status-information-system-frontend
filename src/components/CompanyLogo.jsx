@@ -22,7 +22,7 @@ const CompanyLogo = ({ size = "md", className, priority = false }) => {
   
     const handleImageLoad = () => console.log("Image loaded successfully");
     const handleImageError = (e) => {
-      console.log("Image failed to load", e.target.src, e.target.error, e.nativeEvent);
+     // console.log("Image failed to load", e.target.src, e.target.error, e.nativeEvent);
       e.target.style.borderColor = 'yellow';
     };
   

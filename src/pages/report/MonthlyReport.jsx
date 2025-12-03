@@ -325,7 +325,7 @@ const MonthlyReport = () => {
             size="large"
             type="error"
             onClick={async () => {
-              console.log("dates picker___", startDate, endDate);
+              //console.log("dates picker___", startDate, endDate);
               await ReportExcelPdf.generatePDF(startDate, endDate);
             }}
             disabled={

@@ -937,82 +937,111 @@ export default function TaskCard({
           <Autocomplete
             freeSolo
             options={suggestions}
-            inputValue={inputValue} // ⭐ controls internal value
-            onInputChange={(e, val) => {
-              setInputValue(val); // update Autocomplete internal state
-              setQuery(val); // update your query state
-              fetchSuggestions(val); // call your debounced API
+            inputValue={inputValue}
+            onInputChange={(e, newValue) => {
+              setInputValue(newValue);
+              setQuery(newValue);
             }}
-            onChange={(e, val) => {
-              if (val) {
-                setQuery(val);
-                setInputValue(val);
+            onChange={(e, newValue) => {
+              if (newValue) {
+                setQuery(newValue);
+                setInputValue(newValue);
               }
             }}
-            sx={{ width: "100%" }}
+            ListboxProps={{
+              sx: {
+                bgcolor: "#1e1e1e",
+                border: "1px solid rgba(94, 140, 255, 0.3)",
+                borderRadius: theme.borderRadius.medium,
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+                maxHeight: 300,
+                overflow: "auto",
+                "& .MuiAutocomplete-option": {
+                  py: 1.5,
+                  px: 3,
+                  fontSize: "0.95rem",
+                  color: "#e0e0e0",
+                  borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(94, 140, 255, 0.15)",
+                    color: theme.colors.primaryLight,
+                    transform: "translateX(8px)",
+                  },
+                  "&.Mui-focused": {
+                    bgcolor: "rgba(94, 140, 255, 0.25)",
+                    color: theme.colors.white,
+                  },
+                },
+              },
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Query (SQL / Logic)"
+                label="Query (SQL / Logic / Description)"
                 multiline
-                rows={5}
+                rows={6}
                 required
-                InputLabelProps={{ style: { color: "#ccc" } }}
-                InputProps={{
-                  ...params.InputProps,
-                  style: { color: "#fff" },
-                }}
+                error={showError && !query.trim()}
+                helperText={
+                  showError && !query.trim()
+                    ? "Query is required"
+                    : "Start typing... suggestions appear automatically"
+                }
+                InputLabelProps={{ style: { color: "#aaa", fontWeight: 500 } }}
                 sx={{
                   mb: 3,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                    bgcolor: "rgba(255,255,255,0.05)",
-                    "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                    bgcolor: "rgba(255, 255, 255, 0.05)",
+                    borderRadius: theme.borderRadius.medium,
+                    backdropFilter: "blur(8px)",
+                    transition: "all 0.3s ease",
+                    "& fieldset": {
+                      borderColor: "rgba(255, 255, 255, 0.15)",
+                      borderWidth: 1,
+                    },
                     "&:hover fieldset": {
-                      borderColor: "rgba(255,255,255,0.4)",
+                      borderColor: theme.colors.primaryLight,
+                      boxShadow: "0 0 0 1px rgba(94, 140, 255, 0.3)",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: theme.colors.primary || "#0066ff",
+                      borderColor: theme.colors.primary,
+                      borderWidth: 2,
+                      boxShadow: "0 0 0 3px rgba(94, 140, 255, 0.2)",
                     },
-                    "&.Mui-error fieldset": { borderColor: "#ff6b6b" },
+                    "&.Mui-error fieldset": {
+                      borderColor: "#ff6b6b",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    color: "#fff",
+                    fontSize: "1rem",
                   },
                 }}
               />
             )}
+            renderOption={(props, option) => (
+              <li {...props} style={{ cursor: "pointer" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: theme.colors.primary,
+                      boxShadow: "0 0 10px rgba(94, 140, 255, 0.6)",
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontFamily: "monospace", fontSize: "0.95rem" }}
+                  >
+                    {option}
+                  </Typography>
+                </Box>
+              </li>
+            )}
           />
-
-          {/* <TextField
-            autoFocus
-            label="Query (SQL / Logic)"
-            required
-            multiline
-            rows={5}
-            fullWidth
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            // Only show error + message after failed attempt
-            error={showError && !query.trim()}
-            helperText={showError && !query.trim() ? "Query is required" : " "}
-            InputLabelProps={{ style: { color: "#ccc" } }}
-            InputProps={{ style: { color: "#fff" } }}
-            sx={{
-              mb: 3,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                bgcolor: "rgba(255,255,255,0.05)",
-                "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
-                "&:hover fieldset": { borderColor: "rgba(255,255,255,0.4)" },
-                "&.Mui-focused fieldset": {
-                  borderColor: theme.colors.primary || "#0066ff",
-                },
-                "&.Mui-error fieldset": { borderColor: "#ff6b6b" }, // red only when error
-              },
-              "& .MuiFormHelperText-root": {
-                color: "#ff6b6b", // red message
-                fontSize: "0.8rem",
-              },
-            }}
-          /> */}
 
           {/* Result Field */}
           <TextField

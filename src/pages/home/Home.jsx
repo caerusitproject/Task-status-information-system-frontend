@@ -77,8 +77,8 @@ const Home = () => {
   }, [])
 
   useEffect(() => {
-    console.log("Context API State (useAuth):", { isAuthenticated, user })
-    console.log("Redux Auth State:", reduxAuthState)
+    // console.log("Context API State (useAuth):", { isAuthenticated, user })
+    // console.log("Redux Auth State:", reduxAuthState)
   }, [])
 
   return (
