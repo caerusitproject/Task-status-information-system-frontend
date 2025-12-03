@@ -141,7 +141,7 @@ const SideNav = ({ collapsed, onToggle }) => {
                     fontSize: "14px",
                   }}
                 >
-                  {user.name || "User"}
+                  {}
                 </div>
               </div>
             </div>
