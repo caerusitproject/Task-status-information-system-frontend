@@ -166,4 +166,20 @@ export const TaskApi = {
       throw error;
     }
   },
+
+  async autoPopulatetags(task_code) {
+    try {
+      const response = await axios.get(
+        `${LOCAL_API}/timesheet/get-application-module-report/${task_code}`,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching tags details:",
+        error.response?.data?.message || error.response?.data
+      );
+      throw error;
+    }
+  },
 };

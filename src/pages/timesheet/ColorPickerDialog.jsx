@@ -171,7 +171,7 @@ export default function LegendPickerDialog({
             // Then, ticket_less ones
             ...legends.filter((legend) => legend.task_type === "ticket_less"),
           ].map((legend) => {
-            console.log("legend___", legend);
+            //console.log("legend___", legend);
             const { color_row: code, task_code: task_id, task_type } = legend;
             const isSelected = selectedColor === code;
 

@@ -45,11 +45,10 @@ export default function TaskCard({
   applications,
   reports,
   loadingHeaderData,
+  fetchReports,
 }) {
   const [task, setTask] = useState(initialTask);
-  console.log("TaskCard received task:", initialTask); // ← ADD THIS LINE
-  console.log("task.id =", initialTask.id); // ← ADD THIS LINE
-  console.log("task.taskId =", initialTask.taskId); // ← ADD THIS LINE
+
   useEffect(() => {
     setTask(initialTask);
   }, [initialTask]);
@@ -71,7 +70,7 @@ export default function TaskCard({
     client_id,
   } = task;
   // console.log(task);
-  console.log("client_id:", client_id);
+  //console.log("client_id:", client_id);
 
   const isIssue = taskType === "issue";
   const showResolution = isIssue && ["Resolved", "Completed"].includes(status);
@@ -83,7 +82,7 @@ export default function TaskCard({
   const [showError, setShowError] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [clientName1, setClientName1] = useState("");
-  console.log("task all task___", task);
+  //console.log("task all task___", task);
 
   const fetchSuggestions = async (query) => {
     if (!query.trim()) return;
@@ -109,7 +108,7 @@ export default function TaskCard({
           (client) => client.id === Number(client_id)
         );
         setClientName1(fetchName?.name || "");
-        console.log("names____", client_id, fetchName?.name || "");
+        //console.log("names____", client_id, fetchName?.name || "");
       } catch (error) {
         console.error("Error fetching client name:", error);
         return null;
@@ -281,31 +280,91 @@ export default function TaskCard({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
             p: 1,
+            position: "relative", // *** allows bottom alignment ***
           }}
         >
-          {ticketId && taskType !== "ticket_less" && (
+          {taskId && taskType !== "ticket_less" && (
             <>
-              <Typography
-                variant="caption"
-                sx={{ fontSize: "0.75rem", mb: 0.5, opacity: 0.8 }}
-              >
-                Task-ID
-              </Typography>
+              {/* Center Content Wrapper */}
               <Box
                 sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "999px",
-                  fontWeight: 600,
-                  fontSize: "0.875rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexGrow: 1, // *** makes this block stay in center ***
+                  width: "100%",
                 }}
               >
-                {taskId}
+                {/* Task ID Label */}
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: "0.75rem", mb: 0.5, opacity: 0.8 }}
+                >
+                  Task-ID
+                </Typography>
+
+                {/* Task ID Value */}
+                <Box
+                  sx={{
+                    bgcolor: "#000",
+                    color: "#fff",
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: "999px",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    textAlign: "center",
+                  }}
+                >
+                  {taskId}
+                </Box>
               </Box>
+
+              {/* Client Section Near Bottom */}
+              {Array.isArray(task.clientName) &&
+                task.clientName.length > 0 &&
+                task.clientName[0]?.clientName?.trim() && (
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      mb: 2, // space up from bottom
+                    }}
+                  >
+                    {/* Client Label */}
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "0.75rem",
+                        mb: 0.5,
+                        opacity: 0.8,
+                      }}
+                    >
+                      Client
+                    </Typography>
+
+                    {/* Client Chip */}
+                    <Chip
+                      label={task.clientName[0]?.clientName}
+                      sx={{
+                        bgcolor: "#000",
+                        color: colorCode,
+                        px: 1.5,
+                        py: 0.5,
+                        borderWidth: "2px",
+                        borderStyle: "solid",
+                        borderColor: colorCode,
+                        fontWeight: 600,
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        maxWidth: "100%",
+                        width: "fit-content",
+                        mx: "auto",
+                      }}
+                    />
+                  </Box>
+                )}
             </>
           )}
         </Box>
@@ -336,6 +395,7 @@ export default function TaskCard({
             applications={applications}
             reports={reports}
             loadingHeaderData={loadingHeaderData}
+            fetchReports={fetchReports}
           />
 
           {/* ---------- 2. The coloured content area ---------- */}
@@ -659,26 +719,6 @@ export default function TaskCard({
               }}
             />
           </Box>
-
-          {Array.isArray(task.clientName) &&
-            task.clientName.length > 0 &&
-            task.clientName[0]?.clientName?.trim() && (
-              <Chip
-                label={task.clientName[0]?.clientName}
-                sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  px: 1.5,
-                  py: 0.5,
-                  mt: 2,
-                  borderRadius: "999px",
-                  fontSize: "0.75rem",
-                  maxWidth: "100%",
-                  width: "fit-content",
-                  mx: "auto",
-                }}
-              />
-            )}
 
           {/* SR + Ticket + URC Buttons */}
           <Box

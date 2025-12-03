@@ -15,8 +15,9 @@ export default function DayCard({
   applications, // ← ADD
   reports, // ← ADD
   loadingHeaderData, // ← ADD
+  fetchReports,
 }) {
-  console.log("day tasks___", day.tasks);
+  //console.log("day tasks___", day.tasks);
   return (
     <Box
       key={day.date}
@@ -143,6 +144,7 @@ export default function DayCard({
                   applications={applications}
                   reports={reports}
                   loadingHeaderData={loadingHeaderData}
+                  fetchReports={fetchReports}
                 />
               </Box>
             ))}

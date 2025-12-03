@@ -47,7 +47,7 @@ export default function TaskFormDialog({
     const fetchClients = async () => {
       try {
         const response = await ClientApi.view();
-        console.log("cleints view__", response);
+        //console.log("cleints view__", response);
         let filteredClients =
           response &&
           response.rows.length > 0 &&

@@ -20,7 +20,7 @@ export const menuItems = [
     label: "Timesheet",
     icon: AccessTimeIcon,
     key: "timesheet",
-   requiredRoles: ["USER", "MANAGER", "HR", "ADMIN"],
+   requiredRoles: ["USER", "MANAGER", "HR",],
   },
   // {
   //   path: "/task-management",

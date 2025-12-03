@@ -243,6 +243,23 @@ export default function Timesheet() {
   }, []);
 
   // Load Applications + Reports ONCE when Timesheet mounts
+  // In Timesheet.jsx – change this function to return the reports
+const fetchReports = async () => {
+  try {
+    setLoadingHeaderData(true);
+    const res = await ApplicationApi.getReports();
+    const list = res?.content || res?.rows || [];
+    setReports(list);
+    return list; // RETURN THE DATA
+  } catch (err) {
+    console.error("Failed to load reports:", err);
+    setReports([]);
+    return [];
+  } finally {
+    setLoadingHeaderData(false);
+  }
+};
+
   useEffect(() => {
     const loadHeaderData = async () => {
       try {
@@ -362,74 +379,100 @@ export default function Timesheet() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+const transform = (data) => {
+  if (!data) return { applications: [], reportName: null };
+
+  // Applications
+  const applicationList = Array.isArray(data.applicationName)
+    ? data.applicationName
+    : [];
+
+  const moduleIds = Array.isArray(data.moduleName)
+    ? data.moduleName.map((m) => m.id)
+    : [];
+
+  const applications = applicationList.map((app) => ({
+    applicationId: app.id,
+    moduleIds,
+  }));
+
+  // Report Name Transform
+  let reportName = null;
+
+  if (Array.isArray(data.reportName) && data.reportName.length > 0) {
+    reportName = data.reportName.map((r) => ({
+      id: r.id,
+      reportName: r.name,
+    }));
+  }
+
+  return { applications, reportName };
+};
+
+
+
   // === Handlers ===
   const handleAddTask = async (legend) => {
-    const taskId = legend.task_code;
-    const taskType = legend.task_type?.toLowerCase(); // normalize case
-    const now = new Date().toISOString(); // current ISO timestamp
+  const taskId = legend.task_code;
 
-    let newTask;
+  try {
+    const res = await TaskApi.autoPopulatetags(taskId);
+    const finalObj = transform(res?.content); // your existing transform
 
-    if (taskType === "issue") {
-      newTask = {
-        taskId: legend.task_code,
-        ticketId: legend.ticket_id,
-        colorCode: legend.color_row,
-        taskType: legend.task_type,
-        sr_no: legend.sr_no,
-        status: legend.status,
-        rca_investigation: "",
-        resolution_and_steps: "",
-        hour: "",
-        minute: "",
-        updatedDate: now, // Include ISO timestamp
-      };
-    } else {
-      newTask = {
-        taskId: legend.task_code,
-        ticketId: legend.ticket_id,
-        colorCode: legend.color_row,
-        taskType: legend.task_type,
-        status: legend.status,
-        daily_accomplishment: "",
-        hour: "",
-        minute: "",
-        updatedDate: now, // Include ISO timestamp
-      };
+    const taskType = legend.task_type?.toLowerCase();
+    const now = new Date().toISOString();
+
+    const baseTask = {
+      taskId: legend.task_code,
+      ticketId: legend.ticket_id,
+      colorCode: legend.color_row,
+      taskType: legend.task_type,
+      sr_no: legend.sr_no || null,
+      status: legend.status,
+      applications: finalObj.applications,
+      reportName: finalObj.reportName,
+      hour: "",
+      minute: "",
+      updatedDate: now,
+    };
+
+    const newTask = taskType === "issue"
+      ? { ...baseTask, rca_investigation: "", resolution_and_steps: "" }
+      : { ...baseTask, daily_accomplishment: "" };
+
+    // Create on backend
+    await TaskApi.createTask(taskId, newTask);
+
+    // REFETCH WEEK → Most reliable
+    const { week } = await TaskApi.weekTasks(
+      selectedWeek.startDate,
+      selectedWeek.endDate
+    );
+
+    let days = week || [];
+    const today = new Date().toISOString().split("T")[0];
+    const todayInWeek = selectedWeek.startDate <= today && today <= selectedWeek.endDate;
+
+    if (todayInWeek && !days.some(d => d.date === today)) {
+      days.push({ date: today, tasks: [] });
     }
 
-    try {
-      // Send task to backend API
-      const response = await TaskApi.createTask(taskId, newTask);
-      //console.log(response?.content?.id)
-      const fetchAllClients = await ClientApi.view();
-      let fetchNameClinet = fetchAllClients.rows.find(
-        (client) => client.id === Number(response?.content?.client_id)
-      );
-      console.log("buddhi___", fetchNameClinet);
-      newTask.id = response?.content?.id;
-      newTask.clientName = [
-        { id: fetchNameClinet?.id, clientName: fetchNameClinet?.name },
-      ]; // TEMPORARY FIX
-      setWeekData((prev) => ({
-        ...prev,
-        week: prev.week.map((day) =>
-          day.date === todayStr
-            ? { ...day, tasks: [...day.tasks, newTask] }
-            : day
-        ),
-      }));
+    days.sort((a, b) => b.date.localeCompare(a.date));
+    setWeekData({ week: days });
 
-      // Optionally refresh legends or week tasks
-      // loadLegends();
-      // setSelectedWeek(selectedWeek);
-    } catch (err) {
-      console.error("Failed to create task:", err);
-      // Optionally notify user
-      // alert("Error creating task. Please try again.");
-    }
-  };
-  console.log("week data___", weekData);
+    // Refresh legends (since one was just used)
+    await loadLegends();
+
+    // Close picker
+    setColorDlgOpen(false);
+
+  } catch (err) {
+    console.error("Failed to create task:", err);
+   // alert("Could not add task. Please try again.");
+  }
+};
+  //console.log("week data___", weekData);
   const validateField = (name, value) => {
     const newErrors = { ...errors };
     delete newErrors[name];
@@ -503,7 +546,7 @@ export default function Timesheet() {
         client_id: [Number(formData.client_id)] || [],
       };
     }
-    console.log("formData__", payload);
+    //console.log("formData__", payload);
     try {
       if (formData.taskId) {
         await TaskApi.edit(formData.taskId, payload);
@@ -637,6 +680,7 @@ export default function Timesheet() {
               clients={clients}
               reports={reports}
               loadingHeaderData={loadingHeaderData}
+              fetchReports={fetchReports}
             />
           ))
         ) : (
