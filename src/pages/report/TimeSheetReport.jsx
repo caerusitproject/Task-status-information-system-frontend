@@ -388,10 +388,11 @@ const TimeSheetReport = () => {
                 padding: "15px 20px",
                 border: "1px solid #dcdcdc",
                 borderRadius: "8px",
-                backgroundColor: "#f8f9fa",
-                color: "#333",
+                backgroundColor: "#333",
+                color:  "#f8f9fa",
                 marginTop: "15px",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                opacity: 0.75,
               }}
             >
               <strong>Generate Your Reports</strong>

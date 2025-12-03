@@ -11,7 +11,7 @@ const CustomLoader = () => (
       right: 0,
       bottom: 0,
       zIndex: 1400,
-      backgroundColor: 'rgba(255, 255, 255, 0.8)', // Theme-neutral overlay
+      backgroundColor: theme.colors.background, // Theme-neutral overlay
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
