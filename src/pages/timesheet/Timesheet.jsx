@@ -5,7 +5,6 @@ import { TaskApi } from "../../api/taskApi";
 import TimesheetHeader from "./TimesheetHeader";
 import LegendsBar from "./LegendsBar";
 import DayCard from "./DayCard";
-import { getWeekTasks } from "./mockApi";
 import TaskFormDialog from "./TaskFormDialog";
 import LegendPickerDialog from "./ColorPickerDialog";
 import { theme } from "../../theme/theme";
@@ -203,7 +202,7 @@ export default function Timesheet() {
             }),
           };
 
-          console.log("SAVING →", payload);
+          //console.log("SAVING →", payload);
           await TaskApi.updateTask(taskDbId, payload);
 
           // Optimistic update
