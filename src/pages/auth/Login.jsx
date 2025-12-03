@@ -93,246 +93,276 @@ const Login = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: `linear-gradient(135deg, ${theme.colors.gray} 0%, ${theme.colors.background} 100%)`,
+        background: theme.colors.background,
         p: isMobile ? 1 : 2,
         overflow: "auto",
       }}
     >
-      <Container maxWidth="xs">
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{
-            backgroundColor: theme.colors.white,
-            p: isMobile ? 2 : 4,
-            borderRadius: theme.borderRadius.large,
-            boxShadow: theme.shadows.large,
-            transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            width: "100%",
+      <Container maxWidth="xs" sx={{ position: "relative", zIndex: 1 }}>
+  <Box
+    component="form"
+    onSubmit={handleSubmit}
+    sx={{
+      background: theme.glass.background,
+      backdropFilter: theme.glass.backdropFilter,
+      WebkitBackdropFilter: theme.glass.backdropFilter,
+      border: theme.glass.border,
+      boxShadow: theme.glass.boxShadow,
+      p: isMobile ? 3 : 5,
+      borderRadius: theme.borderRadius.large,
+      position: "relative",
+      overflow: "hidden",
+      transition: "all 0.4s ease",
+      "&::before": {
+        content: '""',
+        position: "absolute",
+        inset: 0,
+        background: `linear-gradient(135deg, 
+          rgba(255,255,255,0.05) 0%, 
+          transparent 50%, 
+          rgba(0,0,0,0.4) 100%)`,
+        pointerEvents: "none",
+      },
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+        pointerEvents: "none",
+      },
+      "&:hover": {
+        transform: "translateY(-8px)",
+        boxShadow: "0 24px 48px rgba(0, 0, 0, 0.7)",
+      },
+    }}
+  >
+    {/* Header */}
+    <Box sx={{ textAlign: "center", mb: 4 }}>
+      <Typography
+        sx={{
+          color: theme.colors.white,
+          fontWeight: 800,
+          fontSize: isMobile ? "24px" : "30px",
+          letterSpacing: "1px",
+          textShadow: `0 0 20px ${theme.colors.primary}40`,
+          background: `linear-gradient(90deg, ${theme.colors.primaryLight}, ${theme.colors.primary})`,
+          backgroundClip: "text",
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+        }}
+      >
+        Task Status System
+      </Typography>
+    </Box>
+
+    {/* Form Fields */}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Email Field - Glossy Dark Style */}
+      <TextField
+        label="Email Address"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="name@company.com"
+        disabled={loading}
+        required
+        fullWidth
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          style: { borderRadius: theme.borderRadius.medium },
+        }}
+        sx={{
+          "& .MuiFilledInput-root": {
+            background: "rgba(255, 255, 255, 0.06)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: theme.borderRadius.medium,
+            overflow: "hidden",
+            transition: "all 0.3s ease",
             "&:hover": {
-              transform: "scale(1.02)",
-              boxShadow: theme.shadows.large.replace("0.23)", "0.3)"), // Slightly deeper shadow on hover
+              background: "rgba(255, 255, 255, 0.09)",
+              borderColor: theme.colors.primaryLight,
+            },
+            "&.Mui-focused": {
+              background: "rgba(255, 255, 255, 0.1)",
+              borderColor: theme.colors.primary,
+              boxShadow: `0 0 0 2px ${theme.colors.primary}30`,
+            },
+          },
+          "& .MuiInputLabel-root": {
+            color: theme.colors.text.secondary,
+            fontWeight: 500,
+          },
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: theme.colors.primaryLight,
+          },
+          "& input": {
+            color: theme.colors.text.primary,
+            fontSize: "16px",
+            py: 2.2,
+          },
+        }}
+      />
+
+      {/* Password Field */}
+      <TextField
+        label="Password"
+        type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="••••••••"
+        disabled={loading}
+        required
+        fullWidth
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          style: { borderRadius: theme.borderRadius.medium },
+          endAdornment: (
+            <Button
+              onClick={togglePasswordVisibility}
+              disabled={loading}
+              sx={{
+                color: theme.colors.text.secondary,
+                textTransform: "none",
+                fontWeight: 500,
+                minWidth: "auto",
+                "&:hover": { color: theme.colors.primaryLight, bgcolor: "transparent" },
+              }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </Button>
+          ),
+        }}
+        sx={{
+          "& .MuiFilledInput-root": {
+            background: "rgba(255, 255, 255, 0.06)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: theme.borderRadius.medium,
+            transition: "all 0.3s ease",
+            "&:hover": {
+              background: "rgba(255, 255, 255, 0.09)",
+              borderColor: theme.colors.primaryLight,
+            },
+            "&.Mui-focused": {
+              background: "rgba(255, 255, 255, 0.1)",
+              borderColor: theme.colors.primary,
+              boxShadow: `0 0 0 2px ${theme.colors.primary}30`,
+            },
+          },
+          "& .MuiInputLabel-root": {
+            color: theme.colors.text.secondary,
+            fontWeight: 500,
+          },
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: theme.colors.primaryLight,
+          },
+          "& input": {
+            color: theme.colors.text.primary,
+            fontSize: "16px",
+            py: 2.2,
+          },
+        }}
+      />
+
+      {error && (
+        <Alert
+          severity="error"
+          sx={{
+            borderRadius: theme.borderRadius.small,
+            background: "rgba(239, 83, 80, 0.15)",
+            border: "1px solid rgba(239, 83, 80, 0.3)",
+            color: "#ff8a80",
+            "& .MuiAlert-icon": { color: "#ff5252" },
+          }}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Modern Glossy Button */}
+      <Button
+        type="submit"
+        disabled={loading}
+        fullWidth
+        variant="contained"
+        sx={{
+          py: 1.8,
+          fontSize: "17px",
+          fontWeight: 700,
+          textTransform: "none",
+          borderRadius: theme.borderRadius.medium,
+          background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%)`,
+          backgroundSize: "200% 200%",
+          boxShadow: `0 8px 25px ${theme.colors.primary}40`,
+          position: "relative",
+          overflow: "hidden",
+          transition: "all 0.4s ease",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: "-100%",
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+            transition: "0.7s",
+          },
+          "&:hover::before": {
+            left: "100%",
+          },
+          "&:hover": {
+            transform: "translateY(-3px)",
+            boxShadow: `0 12px 35px ${theme.colors.primary}60`,
+            backgroundPosition: "right center",
+          },
+          "&:active": {
+            transform: "translateY(-1px)",
+          },
+          "&.Mui-disabled": {
+            background: theme.colors.mediumGray,
+            opacity: 0.6,
+          },
+        }}
+      >
+        {loading ? (
+          <>
+            <CircularProgress size={22} thickness={4.5} sx={{ mr: 1.5, color: "white" }} />
+            Signing In...
+          </>
+        ) : (
+          "Sign In"
+        )}
+      </Button>
+
+      <Link to="/register" style={{ textDecoration: "none" }}>
+        <Typography
+          align="center"
+          sx={{
+            color: theme.colors.primaryLight,
+            fontWeight: 500,
+            fontSize: "15px",
+            mt: 1,
+            transition: "color 0.3s",
+            "&:hover": {
+              color: theme.colors.primary,
+              textDecoration: "underline",
             },
           }}
         >
-          {/* Header */}
-          <Box
-            sx={{
-              textAlign: "center",
-              mb: isMobile ? 2 : 3,
-            }}
-          >
-            {/* <Box
-              component="img"
-              src={CompanyLogo}
-              alt="Caerus Company Logo"
-              sx={{
-                height: { xs: "40px", sm: "48px" },
-                width: { xs: "140px", sm: "200px" },
-                maxWidth: "100%",
-                objectFit: "contain",
-                mb: 1.5,
-                mx: "auto",
-              }}
-            /> */}
-            <Typography
-              sx={{
-                color: theme.colors.primary,
-                mb: 3,
-                fontWeight: 700,
-                fontSize: isMobile ? "20px" : "24px",
-                letterSpacing: "0.5px",
-              }}
-            >
-              Task Status Information System
-            </Typography>
-            {/* <Typography
-              variant="body2"
-              sx={{
-                color: theme.colors.text.secondary,
-                mb: 0,
-                fontWeight: 400,
-                letterSpacing: "0.3px",
-              }}
-            >
-              {COMPANY_INFO.description}
-            </Typography> */}
-          </Box>
-
-          {/* Login Form */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: isMobile ? 1.5 : 2,
-            }}
-          >
-            {/* Email Input */}
-            <TextField
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter your email"
-              disabled={loading}
-              required
-              fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: theme.borderRadius.small,
-                  backgroundColor: theme.colors.white,
-                  "& fieldset": {
-                    borderColor: theme.colors.lightGray,
-                  },
-                  "&:hover fieldset": {
-                    borderColor: theme.colors.primary,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.colors.primary,
-                    borderWidth: 2,
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: theme.colors.text.primary,
-                  fontWeight: 500,
-                  letterSpacing: "0.2px",
-                  fontSize: { xs: "14px", sm: "18px" },
-                },
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "14px", sm: "16px" },
-                  color: theme.colors.text.primary,
-                },
-              }}
-            />
-
-            {/* Password Input */}
-            <TextField
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter your password"
-              disabled={loading}
-              required
-              fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: theme.borderRadius.small,
-                  backgroundColor: theme.colors.white,
-                  "& fieldset": {
-                    borderColor: theme.colors.lightGray,
-                  },
-                  "&:hover fieldset": {
-                    borderColor: theme.colors.primary,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.colors.primary,
-                    borderWidth: 2,
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: theme.colors.text.primary,
-                  fontWeight: 500,
-                  letterSpacing: "0.2px",
-                  fontSize: { xs: "14px", sm: "18px" },
-                },
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "14px", sm: "16px" },
-                  color: theme.colors.text.primary,
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <Button
-                    onClick={togglePasswordVisibility}
-                    disabled={loading}
-                    sx={{
-                      minWidth: "auto",
-                      p: 0.5,
-                      color: theme.colors.text.secondary,
-                      "&:hover": { color: theme.colors.primary },
-                    }}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </Button>
-                ),
-              }}
-            />
-
-            {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mt: 1,
-                  borderRadius: theme.borderRadius.small,
-                  fontSize: { xs: "12px", sm: "14px" },
-                  letterSpacing: "0.2px",
-                  "& .MuiAlert-message": {
-                    p: 1,
-                  },
-                }}
-              >
-                {error}
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading}
-              fullWidth
-              variant="contained"
-              sx={{
-                py: { xs: 1.5, sm: 1.75 },
-                fontSize: { xs: "14px", sm: "16px" },
-                fontWeight: 600,
-                borderRadius: theme.borderRadius.medium,
-                background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%)`,
-                boxShadow: theme.shadows.medium,
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "transform 0.3s ease",
-                letterSpacing: "0.5px",
-                textTransform: "none",
-                "&:hover": {
-                  transform: "scale(1.02)",
-                  boxShadow: theme.shadows.large,
-                  backgroundColor: theme.colors.primaryDark,
-                },
-                "&:disabled": {
-                  backgroundColor: theme.colors.text.disabled,
-                },
-              }}
-            >
-              {loading ? (
-                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-              ) : null}
-              {loading ? "Signing In..." : "Sign In"}
-            </Button>
-            <Link to="/register" style={{ textDecoration: "none" }}>
-              <Typography
-                sx={{
-                  mt: 2,
-                  textAlign: "center",
-                  color: theme.colors.primary,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  "&:hover": {
-                    textDecoration: "underline",
-                  },
-                }}
-              >
-                Register a new account
-              </Typography>
-            </Link>
-          </Box>
-
-          {/* Demo Info */}
-        </Box>
-      </Container>
+          Don't have an account? Register here
+        </Typography>
+      </Link>
+    </Box>
+  </Box>
+</Container>
     </Box>
   );
 };

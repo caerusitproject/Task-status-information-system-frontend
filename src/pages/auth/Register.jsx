@@ -99,230 +99,248 @@ const Register = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: `linear-gradient(135deg, ${theme.colors.gray} 0%, ${theme.colors.background} 100%)`,
+        background: theme.colors.background,
         p: isMobile ? 1 : 2,
         overflow: "auto",
       }}
     >
-      <Container maxWidth="xs">
+      <Container maxWidth="xs" sx={{ position: "relative", zIndex: 1 }}>
         <Box
           component="form"
           onSubmit={handleSubmit}
           sx={{
-            backgroundColor: theme.colors.white,
-            p: isMobile ? 2 : 4,
+            background: theme.glass.background,
+            backdropFilter: theme.glass.backdropFilter,
+            WebkitBackdropFilter: theme.glass.backdropFilter,
+            border: theme.glass.border,
+            boxShadow: theme.glass.boxShadow,
+            p: isMobile ? 3 : 5,
             borderRadius: theme.borderRadius.large,
-            boxShadow: theme.shadows.large,
-            transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            width: "100%",
+            position: "relative",
+            overflow: "hidden",
+            transition: "all 0.4s ease",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              background: `linear-gradient(135deg, 
+          rgba(255,255,255,0.05) 0%, 
+          transparent 50%, 
+          rgba(0,0,0,0.4) 100%)`,
+              pointerEvents: "none",
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+              pointerEvents: "none",
+            },
             "&:hover": {
-              transform: "scale(1.02)",
-              boxShadow: theme.shadows.large.replace("0.23)", "0.3)"), // Slightly deeper shadow on hover
+              transform: "translateY(-8px)",
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.7)",
             },
           }}
         >
           {/* Header */}
-          <Box
-            sx={{
-              textAlign: "center",
-              mb: isMobile ? 2 : 3,
-            }}
-          >
-            {/* <Box
-              component="img"
-              src={CompanyLogo}
-              alt="Caerus Company Logo"
-              sx={{
-                height: { xs: "40px", sm: "48px" },
-                width: { xs: "140px", sm: "200px" },
-                maxWidth: "100%",
-                objectFit: "contain",
-                mb: 1.5,
-                mx: "auto",
-              }}
-            /> */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
             <Typography
               sx={{
-                color: theme.colors.primary,
-                mb: 3,
-                fontWeight: 700,
-                fontSize: isMobile ? "20px" : "24px",
-                letterSpacing: "0.5px",
+                color: theme.colors.white,
+                fontWeight: 800,
+                fontSize: isMobile ? "24px" : "30px",
+                letterSpacing: "1px",
+                textShadow: `0 0 20px ${theme.colors.primary}40`,
+                background: `linear-gradient(90deg, ${theme.colors.primaryLight}, ${theme.colors.primary})`,
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
               }}
             >
-              Sign Up
+              Create Account
             </Typography>
-            {/* <Typography
-              variant="body2"
-              sx={{
-                color: theme.colors.text.secondary,
-                mb: 0,
-                fontWeight: 400,
-                letterSpacing: "0.3px",
-              }}
-            >
-              {COMPANY_INFO.description}
-            </Typography> */}
           </Box>
 
-          {/* Login Form */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: isMobile ? 1.5 : 2,
-            }}
-          >
-            {/* Email Input */}
+          {/* Form Fields */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Email Field */}
             <TextField
               label="Email Address"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter your email"
+              placeholder="name@company.com"
               disabled={loading}
               required
               fullWidth
-              variant="outlined"
+              variant="filled"
+              InputProps={{
+                disableUnderline: true,
+                style: { borderRadius: theme.borderRadius.medium },
+              }}
               sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: theme.borderRadius.small,
-                  backgroundColor: theme.colors.white,
-                  "& fieldset": {
-                    borderColor: theme.colors.lightGray,
+                "& .MuiFilledInput-root": {
+                  background: "rgba(255, 255, 255, 0.06)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: theme.borderRadius.medium,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    background: "rgba(255,255,255, 0.09)",
+                    borderColor: theme.colors.primaryLight,
                   },
-                  "&:hover fieldset": {
+                  "&.Mui-focused": {
+                    background: "rgba(255, 255, 255, 0.1)",
                     borderColor: theme.colors.primary,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.colors.primary,
-                    borderWidth: 2,
+                    boxShadow: `0 0 0 2px ${theme.colors.primary}30`,
                   },
                 },
                 "& .MuiInputLabel-root": {
-                  color: theme.colors.text.primary,
+                  color: theme.colors.text.secondary,
                   fontWeight: 500,
-                  letterSpacing: "0.2px",
-                  fontSize: { xs: "14px", sm: "18px" },
                 },
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "14px", sm: "16px" },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: theme.colors.primaryLight,
+                },
+                "& input": {
                   color: theme.colors.text.primary,
+                  fontSize: "16px",
+                  py: 2.2,
                 },
               }}
             />
 
-            {/* Password Input */}
+            {/* Password Field */}
             <TextField
-              name="password"
               label="Password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              //   onKeyPress={handleKeyPress}
-              placeholder="Enter your password"
+              placeholder="Create a strong password"
               disabled={loading}
               required
               fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: theme.borderRadius.small,
-                  backgroundColor: theme.colors.white,
-                  "& fieldset": {
-                    borderColor: theme.colors.lightGray,
-                  },
-                  "&:hover fieldset": {
-                    borderColor: theme.colors.primary,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.colors.primary,
-                    borderWidth: 2,
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: theme.colors.text.primary,
-                  fontWeight: 500,
-                  letterSpacing: "0.2px",
-                  fontSize: { xs: "14px", sm: "18px" },
-                },
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "14px", sm: "16px" },
-                  color: theme.colors.text.primary,
-                },
-              }}
+              variant="filled"
               InputProps={{
+                disableUnderline: true,
+                style: { borderRadius: theme.borderRadius.medium },
                 endAdornment: (
                   <Button
-                    onClick={(e) => togglePasswordVisibility("password")}
+                    onClick={() => togglePasswordVisibility("password")}
                     disabled={loading}
                     sx={{
-                      minWidth: "auto",
-                      p: 0.5,
                       color: theme.colors.text.secondary,
-                      "&:hover": { color: theme.colors.primary },
+                      textTransform: "none",
+                      fontWeight: 500,
+                      "&:hover": {
+                        color: theme.colors.primaryLight,
+                        bgcolor: "transparent",
+                      },
                     }}
                   >
                     {showPassword ? "Hide" : "Show"}
                   </Button>
                 ),
               }}
+              sx={{
+                "& .MuiFilledInput-root": {
+                  background: "rgba(255, 255, 255, 0.06)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: theme.borderRadius.medium,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    background: "rgba(255, 255, 255, 0.09)",
+                    borderColor: theme.colors.primaryLight,
+                  },
+                  "&.Mui-focused": {
+                    background: "rgba(255, 255, 255, 0.1)",
+                    borderColor: theme.colors.primary,
+                    boxShadow: `0 0 0 2px ${theme.colors.primary}30`,
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: theme.colors.text.secondary,
+                  fontWeight: 500,
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: theme.colors.primaryLight,
+                },
+                "& input": {
+                  color: theme.colors.text.primary,
+                  fontSize: "16px",
+                  py: 2.2,
+                },
+              }}
             />
 
+            {/* Confirm Password Field */}
             <TextField
-              name="confirmPassword"
               label="Confirm Password"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter your password"
+              placeholder="Re-type your password"
               disabled={loading}
               required
               fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: theme.borderRadius.small,
-                  backgroundColor: theme.colors.white,
-                  "& fieldset": {
-                    borderColor: theme.colors.lightGray,
-                  },
-                  "&:hover fieldset": {
-                    borderColor: theme.colors.primary,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.colors.primary,
-                    borderWidth: 2,
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: theme.colors.text.primary,
-                  fontWeight: 500,
-                  letterSpacing: "0.2px",
-                  fontSize: { xs: "14px", sm: "18px" },
-                },
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "14px", sm: "16px" },
-                  color: theme.colors.text.primary,
-                },
-              }}
+              variant="filled"
               InputProps={{
+                disableUnderline: true,
+                style: { borderRadius: theme.borderRadius.medium },
                 endAdornment: (
                   <Button
-                    onClick={(e) => togglePasswordVisibility("confirmPassword")}
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
                     disabled={loading}
                     sx={{
-                      minWidth: "auto",
-                      p: 0.5,
                       color: theme.colors.text.secondary,
-                      "&:hover": { color: theme.colors.primary },
+                      textTransform: "none",
+                      fontWeight: 500,
+                      "&:hover": {
+                        color: theme.colors.primaryLight,
+                        bgcolor: "transparent",
+                      },
                     }}
                   >
                     {showConfirmPassword ? "Hide" : "Show"}
                   </Button>
                 ),
+              }}
+              sx={{
+                "& .MuiFilledInput-root": {
+                  background: "rgba(255, 255, 255, 0.06)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: theme.borderRadius.medium,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    background: "rgba(255, 255, 255, 0.09)",
+                    borderColor: theme.colors.primaryLight,
+                  },
+                  "&.Mui-focused": {
+                    background: "rgba(255, 255, 255, 0.1)",
+                    borderColor: theme.colors.primary,
+                    boxShadow: `0 0 0 2px ${theme.colors.primary}30`,
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: theme.colors.text.secondary,
+                  fontWeight: 500,
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: theme.colors.primaryLight,
+                },
+                "& input": {
+                  color: theme.colors.text.primary,
+                  fontSize: "16px",
+                  py: 2.2,
+                },
               }}
             />
 
@@ -330,60 +348,84 @@ const Register = () => {
               <Alert
                 severity="error"
                 sx={{
-                  mt: 1,
                   borderRadius: theme.borderRadius.small,
-                  fontSize: { xs: "12px", sm: "14px" },
-                  letterSpacing: "0.2px",
-                  "& .MuiAlert-message": {
-                    p: 1,
-                  },
+                  background: "rgba(239, 83, 80, 0.15)",
+                  border: "1px solid rgba(239, 83, 80, 0.3)",
+                  color: "#ff8a80",
+                  "& .MuiAlert-icon": { color: "#ff5252" },
                 }}
               >
                 {error}
               </Alert>
             )}
 
+            {/* Glossy Sign Up Button */}
             <Button
               type="submit"
               disabled={loading}
               fullWidth
               variant="contained"
               sx={{
-                py: { xs: 1.5, sm: 1.75 },
-                fontSize: { xs: "14px", sm: "16px" },
-                fontWeight: 600,
-                borderRadius: theme.borderRadius.medium,
-                background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%)`,
-                boxShadow: theme.shadows.medium,
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "transform 0.3s ease",
-                letterSpacing: "0.5px",
+                py: 1.8,
+                fontSize: "17px",
+                fontWeight: 700,
                 textTransform: "none",
-                "&:hover": {
-                  transform: "scale(1.02)",
-                  boxShadow: theme.shadows.large,
-                  backgroundColor: theme.colors.primaryDark,
+                borderRadius: theme.borderRadius.medium,
+                background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%)`,
+                backgroundSize: "200% 200%",
+                boxShadow: `0 8px 25px ${theme.colors.primary}40`,
+                position: "relative",
+                overflow: "hidden",
+                transition: "all 0.4s ease",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: 0,
+                  left: "-100%",
+                  width: "100%",
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+                  transition: "0.7s",
                 },
-                "&:disabled": {
-                  backgroundColor: theme.colors.text.disabled,
+                "&:hover::before": { left: "100%" },
+                "&:hover": {
+                  transform: "translateY(-3px)",
+                  boxShadow: `0 12px 35px ${theme.colors.primary}60`,
+                  backgroundPosition: "right center",
+                },
+                "&:active": { transform: "translateY(-1px)" },
+                "&.Mui-disabled": {
+                  background: theme.colors.mediumGray,
+                  opacity: 0.6,
                 },
               }}
             >
               {loading ? (
-                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-              ) : null}
-              {loading ? "Signing Up..." : "Sign Up"}
+                <>
+                  <CircularProgress
+                    size={22}
+                    thickness={4.5}
+                    sx={{ mr: 1.5, color: "white" }}
+                  />
+                  Creating Account...
+                </>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
+
             <Link to="/login" style={{ textDecoration: "none" }}>
               <Typography
+                align="center"
                 sx={{
-                  mt: 2,
-                  textAlign: "center",
-                  color: theme.colors.primary,
+                  color: theme.colors.primaryLight,
                   fontWeight: 500,
-                  cursor: "pointer",
+                  fontSize: "15px",
+                  mt: 1,
+                  transition: "color 0.3s",
                   "&:hover": {
+                    color: theme.colors.primary,
                     textDecoration: "underline",
                   },
                 }}
@@ -392,8 +434,6 @@ const Register = () => {
               </Typography>
             </Link>
           </Box>
-
-          {/* Demo Info */}
         </Box>
       </Container>
     </Box>
