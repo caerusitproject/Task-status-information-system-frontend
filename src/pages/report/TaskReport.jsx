@@ -312,8 +312,16 @@ const TaskReport = () => {
                 : true
             }
             onClick={async () => {
-              console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generateExcelTask(startDate, endDate);
+              const start = startDate;
+
+              const end = new Date(endDate);
+              end.setDate(end.getDate() + 1);
+
+              const endPlusOne = end.toISOString().split("T")[0];
+
+              console.log("dates picker___", start, endPlusOne);
+
+              await ReportExcelPdf.generateExcelTask(start, endPlusOne);
             }}
           >
             <div style={{ display: "flex", gap: "2px" }}>
@@ -325,8 +333,15 @@ const TaskReport = () => {
             size="large"
             type="error"
             onClick={async () => {
-              console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generatePDFTask(startDate, endDate);
+              const start = startDate;
+
+              const end = new Date(endDate);
+              end.setDate(end.getDate() + 1);
+
+              const endPlusOne = end.toISOString().split("T")[0];
+
+              console.log("dates picker___", start, endPlusOne);
+              await ReportExcelPdf.generatePDFTask(start, endPlusOne);
             }}
             disabled={
               startDate && endDate && startDate.length > 0 && endDate.length > 0

@@ -312,8 +312,15 @@ const TimeSheetReport = () => {
                 : true
             }
             onClick={async () => {
-              console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generateExcel(startDate, endDate);
+              const start = startDate;
+
+              const end = new Date(endDate);
+              end.setDate(end.getDate() + 1);
+
+              const endPlusOne = end.toISOString().split("T")[0];
+
+              console.log("dates picker___", start, endPlusOne);
+              await ReportExcelPdf.generateExcel(start, endPlusOne);
             }}
           >
             <div style={{ display: "flex", gap: "2px" }}>
@@ -325,8 +332,15 @@ const TimeSheetReport = () => {
             size="large"
             type="error"
             onClick={async () => {
-              //console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generatePDF(startDate, endDate);
+              const start = startDate;
+
+              const end = new Date(endDate);
+              end.setDate(end.getDate() + 1);
+
+              const endPlusOne = end.toISOString().split("T")[0];
+
+              console.log("dates picker___", start, endPlusOne);
+              await ReportExcelPdf.generatePDF(start, endPlusOne);
             }}
             disabled={
               startDate && endDate && startDate.length > 0 && endDate.length > 0
