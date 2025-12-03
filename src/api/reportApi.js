@@ -54,7 +54,6 @@ export const ReportExcelPdf = {
       //   throw error;
     }
   },
-
   async generatePDF(startDate, endDate) {
     try {
       let url = `${LOCAL_API}/report/generatePDFReport`;
@@ -73,6 +72,79 @@ export const ReportExcelPdf = {
       const link = document.createElement("a");
       link.href = urlBlob;
       link.setAttribute("download", "Timesheet Report.pdf");
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error(
+        "Error downloading PDF:",
+        error.response?.data || error.message
+      );
+    }
+  },
+
+  async generateExcelTask(startDate, endDate) {
+    try {
+      // Build URL dynamically — add pagination only if provided
+      let url = `${LOCAL_API}/report/generateExcelReportTask`;
+
+      //   if (page !== undefined && pageSize !== undefined) {
+      //     url += `?page=${page}&pagesize=${pageSize}`;
+      //   }
+      const response = await axios.post(
+        url,
+        {
+          startDate,
+          endDate,
+        },
+        { responseType: "blob" }
+        // { headers: getAuthHeaders() }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const urlBlob = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      console.log("excel link___", link);
+      link.href = urlBlob;
+      link.setAttribute("download", "Task Report.xlsx");
+      document.body.appendChild(link);
+      //   const html = XLSX.utils.sheet_to_html(sheet);
+      link.click();
+      link.remove();
+      //  return {
+      //     html,
+      //     blob: response.data,
+      //     fileName: "timesheet.xlsx",
+      // };
+    } catch (error) {
+      console.error(
+        "Error fetching Applications:",
+        error.response?.data || error.message
+      );
+      //   throw error;
+    }
+  },
+
+  async generatePDFTask(startDate, endDate) {
+    try {
+      let url = `${LOCAL_API}/report/generatePDFReportTask`;
+
+      const response = await axios.post(
+        url,
+        { startDate, endDate },
+        { responseType: "blob" } // ✅ IMPORTANT for PDF
+      );
+
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
+
+      const urlBlob = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = urlBlob;
+      link.setAttribute("download", "Task Report.pdf");
 
       document.body.appendChild(link);
       link.click();

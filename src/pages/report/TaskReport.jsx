@@ -65,7 +65,7 @@ const months = [
   { value: "12", label: "December" },
 ];
 
-const MonthlyReport = () => {
+const TaskReport = () => {
   const [month, setMonth] = useState("");
   const [days, setDays] = useState([]);
   const [pagination, setPagination] = useState({
@@ -197,7 +197,7 @@ const MonthlyReport = () => {
         {/* Left side: Title + Duration */}
         <Box>
           <Typography variant="h5" fontWeight={600}>
-            Time Sheet Report
+            Task View Report
           </Typography>
 
           {!loading && data?.duration && (
@@ -313,7 +313,7 @@ const MonthlyReport = () => {
             }
             onClick={async () => {
               console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generateExcel(startDate, endDate);
+              await ReportExcelPdf.generateExcelTask(startDate, endDate);
             }}
           >
             <div style={{ display: "flex", gap: "2px" }}>
@@ -326,7 +326,7 @@ const MonthlyReport = () => {
             type="error"
             onClick={async () => {
               console.log("dates picker___", startDate, endDate);
-              await ReportExcelPdf.generatePDF(startDate, endDate);
+              await ReportExcelPdf.generatePDFTask(startDate, endDate);
             }}
             disabled={
               startDate && endDate && startDate.length > 0 && endDate.length > 0
@@ -544,4 +544,4 @@ const MonthlyReport = () => {
   );
 };
 
-export default MonthlyReport;
+export default TaskReport;

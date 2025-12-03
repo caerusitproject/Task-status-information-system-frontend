@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Box, Paper, Tabs, Tab } from "@mui/material";
 import { theme as customTheme } from "../../theme/theme";
 
-import TimeSheetReport from "./MonthlyReport";
+import TimeSheetReport from "./TimeSheetReport";
 import WeeklyReport from "./WeeklyReport";
+import TaskReport from "./TaskReport";
 import IndividualReport from "./IndividualReport";
 
 export default function GenerateReport() {
@@ -18,7 +19,7 @@ export default function GenerateReport() {
       case 0:
         return <TimeSheetReport />;
       case 1:
-        return <WeeklyReport />;
+        return <TaskReport />;
       case 2:
         return <IndividualReport />;
       default:
@@ -89,7 +90,7 @@ export default function GenerateReport() {
           }}
         >
           <Tab label="Time Sheet Report" />
-          <Tab disabled={true} label="Task Report" />
+          <Tab label="Task Report" />
           <Tab disabled={true} label="Individual Report" />
         </Tabs>
       </Paper>
