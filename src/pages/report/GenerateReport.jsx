@@ -3,9 +3,8 @@ import { Box, Paper, Tabs, Tab } from "@mui/material";
 import { theme as customTheme } from "../../theme/theme";
 
 import TimeSheetReport from "./TimeSheetReport";
-import WeeklyReport from "./WeeklyReport";
 import TaskReport from "./TaskReport";
-import IndividualReport from "./IndividualReport";
+
 
 export default function GenerateReport() {
   const [activeTab, setActiveTab] = useState(0);
@@ -20,8 +19,7 @@ export default function GenerateReport() {
         return <TimeSheetReport />;
       case 1:
         return <TaskReport />;
-      case 2:
-        return <IndividualReport />;
+      
       default:
         return null;
     }
@@ -91,7 +89,6 @@ export default function GenerateReport() {
         >
           <Tab label="Time Sheet Report" />
           <Tab label="Task Report" />
-          <Tab disabled={true} label="Individual Report" />
         </Tabs>
       </Paper>
 
