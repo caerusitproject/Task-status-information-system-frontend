@@ -9,7 +9,7 @@ const App = () => {
   
   return (
     <ReduxProvider>
-      <BrowserRouter basename="/app">
+      <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
