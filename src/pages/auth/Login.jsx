@@ -48,7 +48,7 @@ const Login = () => {
     if (success && success.status) {
       localStorage.setItem("user", JSON.stringify(success.user));
       localStorage.setItem("token", success?.token);
-      storeAuthData(success.data);
+      // storeAuthData(success.data);
       await login(success.user);
       // const isAdmin =
       //   success?.user.role?.includes("USER") || success?.user.role === "USER";
