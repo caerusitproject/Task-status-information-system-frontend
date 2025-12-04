@@ -21,9 +21,7 @@ import CustomLoader from "../../components/common/CustomLoader";
 import { ReportExcelPdf } from "../../api/reportApi";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
-// import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-// import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-// Mock API Data - Full month data
+
 const mockFullMonthlyData = {
   duration: "November 2025",
   generatedOn: "2025-11-04",
