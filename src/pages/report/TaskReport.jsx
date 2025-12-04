@@ -317,7 +317,7 @@ const TaskReport = () => {
 
               const endPlusOne = end.toISOString().split("T")[0];
 
-              console.log("dates picker___", start, endPlusOne);
+              // console.log("dates picker___", start, endPlusOne);
 
               await ReportExcelPdf.generateExcelTask(start, endPlusOne);
             }}
@@ -338,7 +338,7 @@ const TaskReport = () => {
 
               const endPlusOne = end.toISOString().split("T")[0];
 
-              console.log("dates picker___", start, endPlusOne);
+              // console.log("dates picker___", start, endPlusOne);
               await ReportExcelPdf.generatePDFTask(start, endPlusOne);
             }}
             disabled={
@@ -381,14 +381,14 @@ const TaskReport = () => {
             }}
           >
             <div
-             style={{
+              style={{
                 width: "100%",
                 // maxWidth: "600px",
                 padding: "15px 20px",
                 border: "1px solid #dcdcdc",
                 borderRadius: "8px",
                 backgroundColor: "#333",
-                color:  "#f8f9fa",
+                color: "#f8f9fa",
                 marginTop: "15px",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 opacity: 0.75,

@@ -16,21 +16,27 @@ export const AuthApi = {
       const response = await axios.post(`${LOCAL_API}/auth/login`, body);
       return response.data; // axios returns data in response.data
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'iLogin failed (Invalid email or password)');
+      throw new Error(
+        error.response?.data?.message ||
+          "iLogin failed (Invalid email or password)"
+      );
     }
   },
 
   async refreshAccessToken(refrestoken) {
     try {
-      console.log("Refreshing access token with refresh, refreshToken:", refrestoken);
-      const refreshToken ={  refreshToken : refrestoken}
-      const response = await axios.post(`${LOCAL_API}/auth/refresh`, refreshToken, {
-         headers: getAuthHeaders(),
-      });
+      // console.log("Refreshing access token with refresh, refreshToken:", refrestoken);
+      const refreshToken = { refreshToken: refrestoken };
+      const response = await axios.post(
+        `${LOCAL_API}/auth/refresh`,
+        refreshToken,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
       return response.data; // Should return { accessToken, refreshToken }
     } catch (error) {
-      throw new Error('Token refresh failed');
+      throw new Error("Token refresh failed");
     }
-  }
-
+  },
 };

@@ -34,7 +34,6 @@ export const ReportExcelPdf = {
       });
       const urlBlob = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      console.log("excel link___", link);
       link.href = urlBlob;
       link.setAttribute("download", "Timesheet Report.xlsx");
       document.body.appendChild(link);
@@ -106,7 +105,7 @@ export const ReportExcelPdf = {
       });
       const urlBlob = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      console.log("excel link___", link);
+      // console.log("excel link___", link);
       link.href = urlBlob;
       link.setAttribute("download", "Task Report.xlsx");
       document.body.appendChild(link);
