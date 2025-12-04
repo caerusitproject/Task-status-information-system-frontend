@@ -6,7 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem("isAuthenticated") === "true";
+    return localStorage.getItem("tsis_isAuthenticated") === "true";
   });
   const savedUser = localStorage.getItem("user");
 
@@ -22,25 +22,9 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // === REMOVE ALL API CALLS ===
-      // Simulate login with any credentials
-      // const dummyUser = {
-      //   id: 999,
-      //   email: email,
-      //   name: email,
-      //   role: "ADMIN", // or "HR", "MANAGER", "USER"
-      //   roles: ["ADMIN"],
-      //   empCode: "EMP9999",
-      //   departmentId: 1,
-      //   designation: "Software Engineer",
-      //   mobile: "+919876543210",
-      //   phone: "+919876543210",
-      //   loginTime: new Date().toISOString(),
-      // };
-
       setIsAuthenticated(true);
       setUser(userData);
-      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("tsis_isAuthenticated", "true");
       localStorage.setItem("user", JSON.stringify(userData));
 
       setLoading(false);
@@ -61,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const authStatus = localStorage.getItem("isAuthenticated");
+    const authStatus = localStorage.getItem("tsis_isAuthenticated");
     const userData = localStorage.getItem("user");
 
     if (authStatus === "true" && userData) {

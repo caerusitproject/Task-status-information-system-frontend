@@ -1,21 +1,21 @@
-import { setCookie, getCookie } from '../../utils/cookiesUtil';
+import { setCookie, getCookie } from "../../utils/cookiesUtil";
 
 // Cookie names constants
 const COOKIE_KEYS = {
-  ACCESS_TOKEN: 'accessToken',
-  REFRESH_TOKEN: 'refreshToken',
-  USER_ID: 'userId',
-  USER_EMAIL: 'userEmail',
-  USER_NAME: 'userName',
-  USER_ROLES: 'userRoles',
-  LOGIN_TIME: 'loginTime'
+  ACCESS_TOKEN: "accessToken",
+  REFRESH_TOKEN: "refreshToken",
+  USER_ID: "userId",
+  USER_EMAIL: "userEmail",
+  USER_NAME: "userName",
+  USER_ROLES: "userRoles",
+  LOGIN_TIME: "loginTime",
 };
 
 // Token expiry days
 const TOKEN_EXPIRY = {
-  ACCESS_TOKEN: 1,      // 1 day
-  REFRESH_TOKEN: 7,     // 7 days
-  USER_DATA: 7          // 7 days
+  ACCESS_TOKEN: 1, // 1 day
+  REFRESH_TOKEN: 7, // 7 days
+  USER_DATA: 7, // 7 days
 };
 
 /**
@@ -31,32 +31,40 @@ export const storeAuthData = (authResponse) => {
     const { accessToken, refreshToken, userData } = authResponse;
 
     if (!accessToken || !refreshToken || !userData) {
-      console.error('storeAuthData: Missing required authentication data');
+      console.error("storeAuthData: Missing required authentication data");
       return false;
     }
 
     // Store tokens
     setCookie(COOKIE_KEYS.ACCESS_TOKEN, accessToken, TOKEN_EXPIRY.ACCESS_TOKEN);
-    setCookie(COOKIE_KEYS.REFRESH_TOKEN, refreshToken, TOKEN_EXPIRY.REFRESH_TOKEN);
+    setCookie(
+      COOKIE_KEYS.REFRESH_TOKEN,
+      refreshToken,
+      TOKEN_EXPIRY.REFRESH_TOKEN
+    );
 
     // Store user data
     setCookie(COOKIE_KEYS.USER_ID, userData.id, TOKEN_EXPIRY.USER_DATA);
     setCookie(COOKIE_KEYS.USER_EMAIL, userData.email, TOKEN_EXPIRY.USER_DATA);
     //setCookie(COOKIE_KEYS.USER_NAME, userData.username, TOKEN_EXPIRY.USER_DATA);
-    
-    // Store roles as JSON string (authorities array)
-    const roles = Array.isArray(userData.authorities) 
-      ? userData.authorities.join(',') 
-      : userData.authorities || '';
-    setCookie(COOKIE_KEYS.USER_ROLES, roles, TOKEN_EXPIRY.USER_DATA);
-    
-    // Store login timestamp
-    setCookie(COOKIE_KEYS.LOGIN_TIME, new Date().toISOString(), TOKEN_EXPIRY.USER_DATA);
 
-    console.log('Auth data stored successfully');
+    // Store roles as JSON string (authorities array)
+    const roles = Array.isArray(userData.authorities)
+      ? userData.authorities.join(",")
+      : userData.authorities || "";
+    setCookie(COOKIE_KEYS.USER_ROLES, roles, TOKEN_EXPIRY.USER_DATA);
+
+    // Store login timestamp
+    setCookie(
+      COOKIE_KEYS.LOGIN_TIME,
+      new Date().toISOString(),
+      TOKEN_EXPIRY.USER_DATA
+    );
+
+    // console.log('Auth data stored successfully');
     return true;
   } catch (error) {
-    console.error('storeAuthData: Failed to store auth data:', error);
+    console.error("storeAuthData: Failed to store auth data:", error);
     return false;
   }
 };
@@ -96,12 +104,12 @@ export const getUserData = () => {
     return {
       id: parseInt(id, 10),
       email,
-      username: username || email.split('@')[0],
-      roles: rolesString ? rolesString.split(',') : [],
-      loginTime
+      username: username || email.split("@")[0],
+      roles: rolesString ? rolesString.split(",") : [],
+      loginTime,
     };
   } catch (error) {
-    console.error('getUserData: Failed to retrieve user data:', error);
+    console.error("getUserData: Failed to retrieve user data:", error);
     return null;
   }
 };
@@ -114,12 +122,16 @@ export const getUserData = () => {
 export const updateAccessToken = (newAccessToken) => {
   try {
     if (!newAccessToken) {
-      console.error('updateAccessToken: Invalid token provided');
+      console.error("updateAccessToken: Invalid token provided");
       return false;
     }
-    return setCookie(COOKIE_KEYS.ACCESS_TOKEN, newAccessToken, TOKEN_EXPIRY.ACCESS_TOKEN);
+    return setCookie(
+      COOKIE_KEYS.ACCESS_TOKEN,
+      newAccessToken,
+      TOKEN_EXPIRY.ACCESS_TOKEN
+    );
   } catch (error) {
-    console.error('updateAccessToken: Failed to update access token:', error);
+    console.error("updateAccessToken: Failed to update access token:", error);
     return false;
   }
 };
@@ -132,12 +144,16 @@ export const updateAccessToken = (newAccessToken) => {
 export const updateRefreshToken = (newRefreshToken) => {
   try {
     if (!newRefreshToken) {
-      console.error('updateRefreshToken: Invalid token provided');
+      console.error("updateRefreshToken: Invalid token provided");
       return false;
     }
-    return setCookie(COOKIE_KEYS.REFRESH_TOKEN, newRefreshToken, TOKEN_EXPIRY.REFRESH_TOKEN);
+    return setCookie(
+      COOKIE_KEYS.REFRESH_TOKEN,
+      newRefreshToken,
+      TOKEN_EXPIRY.REFRESH_TOKEN
+    );
   } catch (error) {
-    console.error('updateRefreshToken: Failed to update refresh token:', error);
+    console.error("updateRefreshToken: Failed to update refresh token:", error);
     return false;
   }
 };
@@ -148,13 +164,13 @@ export const updateRefreshToken = (newRefreshToken) => {
  */
 export const clearAuthData = () => {
   try {
-    Object.values(COOKIE_KEYS).forEach(key => {
-      setCookie(key, '', -1); // Set expiry to past date to delete
+    Object.values(COOKIE_KEYS).forEach((key) => {
+      setCookie(key, "", -1); // Set expiry to past date to delete
     });
-    console.log('Auth data cleared successfully');
+    // console.log('Auth data cleared successfully');
     return true;
   } catch (error) {
-    console.error('clearAuthData: Failed to clear auth data:', error);
+    console.error("clearAuthData: Failed to clear auth data:", error);
     return false;
   }
 };
@@ -195,7 +211,7 @@ export const hasRole = (role) => {
  */
 export const hasAnyRole = (requiredRoles) => {
   const userRoles = getUserRoles();
-  return requiredRoles.some(role => userRoles.includes(role));
+  return requiredRoles.some((role) => userRoles.includes(role));
 };
 
 /**
@@ -207,7 +223,7 @@ export const getAuthState = () => {
     isAuthenticated: isAuthenticated(),
     accessToken: getAccessToken(),
     refreshToken: getRefreshToken(),
-    user: getUserData()
+    user: getUserData(),
   };
 };
 
@@ -218,9 +234,9 @@ export const getAuthState = () => {
 export const isAccessTokenExpired = () => {
   const token = getAccessToken();
   if (!token) return true;
-  
+
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload = JSON.parse(atob(token.split(".")[1]));
     const expiry = payload.exp * 1000; // Convert to milliseconds
     return Date.now() >= expiry;
   } catch (error) {
@@ -240,5 +256,6 @@ export default {
   getUserRoles,
   hasRole,
   hasAnyRole,
-  getAuthState,isAccessTokenExpired,
+  getAuthState,
+  isAccessTokenExpired,
 };
