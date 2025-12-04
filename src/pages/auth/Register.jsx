@@ -84,7 +84,7 @@ const Register = () => {
   };
 
   const togglePasswordVisibility = (name) => {
-    console.log(name, "papaji__");
+    // console.log(name, "papaji__");
     if (name === "password") {
       setShowPassword(!showPassword);
     } else if (name === "confirmPassword") {
