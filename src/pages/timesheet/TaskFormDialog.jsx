@@ -302,11 +302,13 @@ export default function TaskFormDialog({
                 <option key="select" value="0">
                   {"Select Client ID"}
                 </option>
-                {client.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </option>
-                ))}
+                {client &&
+                  client.length > 0 &&
+                  client?.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
               </select>
               {errors.client_id && (
                 <p
