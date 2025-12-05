@@ -69,7 +69,7 @@ export default function TaskCard({
     updatedDate,
     client_id,
   } = task;
-  // console.log(task);
+   //console.log(task);
   //console.log("client_id:", client_id);
 
   const isIssue = taskType === "issue";
