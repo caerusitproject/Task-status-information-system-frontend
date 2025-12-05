@@ -228,7 +228,7 @@ export default function Timesheet() {
         } catch (err) {
           console.error("Save failed:", err);
         }
-      }, 600);
+      }, 2000);
     },
     [weekData]
   );
@@ -243,21 +243,21 @@ export default function Timesheet() {
 
   // Load Applications + Reports ONCE when Timesheet mounts
   // In Timesheet.jsx – change this function to return the reports
-const fetchReports = async () => {
-  try {
-    setLoadingHeaderData(true);
-    const res = await ApplicationApi.getReports();
-    const list = res?.content || res?.rows || [];
-    setReports(list);
-    return list; // RETURN THE DATA
-  } catch (err) {
-    console.error("Failed to load reports:", err);
-    setReports([]);
-    return [];
-  } finally {
-    setLoadingHeaderData(false);
-  }
-};
+  const fetchReports = async () => {
+    try {
+      setLoadingHeaderData(true);
+      const res = await ApplicationApi.getReports();
+      const list = res?.content || res?.rows || [];
+      setReports(list);
+      return list; // RETURN THE DATA
+    } catch (err) {
+      console.error("Failed to load reports:", err);
+      setReports([]);
+      return [];
+    } finally {
+      setLoadingHeaderData(false);
+    }
+  };
 
   useEffect(() => {
     const loadHeaderData = async () => {
@@ -378,99 +378,100 @@ const fetchReports = async () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const transform = (data) => {
+    if (!data) return { applications: [], reportName: null };
 
-const transform = (data) => {
-  if (!data) return { applications: [], reportName: null };
+    // Applications
+    const applicationList = Array.isArray(data.applicationName)
+      ? data.applicationName
+      : [];
 
-  // Applications
-  const applicationList = Array.isArray(data.applicationName)
-    ? data.applicationName
-    : [];
+    const moduleIds = Array.isArray(data.moduleName)
+      ? data.moduleName.map((m) => m.id)
+      : [];
 
-  const moduleIds = Array.isArray(data.moduleName)
-    ? data.moduleName.map((m) => m.id)
-    : [];
-
-  const applications = applicationList.map((app) => ({
-    applicationId: app.id,
-    moduleIds,
-  }));
-
-  // Report Name Transform
-  let reportName = null;
-
-  if (Array.isArray(data.reportName) && data.reportName.length > 0) {
-    reportName = data.reportName.map((r) => ({
-      id: r.id,
-      reportName: r.name,
+    const applications = applicationList.map((app) => ({
+      applicationId: app.id,
+      moduleIds,
     }));
-  }
 
-  return { applications, reportName };
-};
+    // Report Name Transform
+    let reportName = null;
 
+    if (Array.isArray(data.reportName) && data.reportName.length > 0) {
+      reportName = data.reportName.map((r) => ({
+        id: r.id,
+        reportName: r.name,
+      }));
+    }
 
+    return { applications, reportName };
+  };
 
   // === Handlers ===
   const handleAddTask = async (legend) => {
-  const taskId = legend.task_code;
+    const taskId = legend.task_code;
 
-  try {
-    const res = await TaskApi.autoPopulatetags(taskId);
-    const finalObj = transform(res?.content); // your existing transform
+    try {
+      const res = await TaskApi.autoPopulatetags(taskId);
+      const finalObj = transform(res?.content); // your existing transform
 
-    const taskType = legend.task_type?.toLowerCase();
-    const now = new Date().toISOString();
+      const taskType = legend.task_type?.toLowerCase();
+      const now = new Date().toISOString();
 
-    const baseTask = {
-      taskId: legend.task_code,
-      ticketId: legend.ticket_id,
-      colorCode: legend.color_row,
-      taskType: legend.task_type,
-      sr_no: legend.sr_no || null,
-      status: legend.status,
-      applications: finalObj.applications,
-      reportName: finalObj.reportName,
-      hour: "",
-      minute: "",
-      updatedDate: now,
-    };
+      const baseTask = {
+        taskId: legend.task_code,
+        ticketId: legend.ticket_id,
+        colorCode: legend.color_row,
+        taskType: legend.task_type,
+        sr_no: legend.sr_no || null,
+        status: legend.status,
+        applications: finalObj.applications,
+        reportName:
+          finalObj.reportName && finalObj.reportName.length > 0
+            ? [...finalObj.reportName.map((ele) => ele.id)]
+            : null,
+        hour: "",
+        minute: "",
+        updatedDate: now,
+      };
 
-    const newTask = taskType === "issue"
-      ? { ...baseTask, rca_investigation: "", resolution_and_steps: "" }
-      : { ...baseTask, daily_accomplishment: "" };
+      const newTask =
+        taskType === "issue"
+          ? { ...baseTask, rca_investigation: "", resolution_and_steps: "" }
+          : { ...baseTask, daily_accomplishment: "" };
 
-    // Create on backend
-    await TaskApi.createTask(taskId, newTask);
+      // Create on backend
+      await TaskApi.createTask(taskId, newTask);
 
-    // REFETCH WEEK → Most reliable
-    const { week } = await TaskApi.weekTasks(
-      selectedWeek.startDate,
-      selectedWeek.endDate
-    );
+      // REFETCH WEEK → Most reliable
+      const { week } = await TaskApi.weekTasks(
+        selectedWeek.startDate,
+        selectedWeek.endDate
+      );
 
-    let days = week || [];
-    const today = new Date().toISOString().split("T")[0];
-    const todayInWeek = selectedWeek.startDate <= today && today <= selectedWeek.endDate;
+      let days = week || [];
+      const today = new Date().toISOString().split("T")[0];
+      const todayInWeek =
+        selectedWeek.startDate <= today && today <= selectedWeek.endDate;
 
-    if (todayInWeek && !days.some(d => d.date === today)) {
-      days.push({ date: today, tasks: [] });
+      if (todayInWeek && !days.some((d) => d.date === today)) {
+        days.push({ date: today, tasks: [] });
+      }
+
+      days.sort((a, b) => b.date.localeCompare(a.date));
+      setWeekData({ week: days });
+
+      // Refresh legends (since one was just used)
+      await loadLegends();
+
+      // Close picker
+      setColorDlgOpen(false);
+    } catch (err) {
+      console.error("Failed to create task:", err);
+      // alert("Could not add task. Please try again.");
     }
-
-    days.sort((a, b) => b.date.localeCompare(a.date));
-    setWeekData({ week: days });
-
-    // Refresh legends (since one was just used)
-    await loadLegends();
-
-    // Close picker
-    setColorDlgOpen(false);
-
-  } catch (err) {
-    console.error("Failed to create task:", err);
-   // alert("Could not add task. Please try again.");
-  }
-};
+  };
   //console.log("week data___", weekData);
   const validateField = (name, value) => {
     const newErrors = { ...errors };
