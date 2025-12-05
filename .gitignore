@@ -3,6 +3,5 @@ node_modules/
 package-lock*
 .vscode/
 package-lock.json
-package.json
 yarn.lock
 .env
