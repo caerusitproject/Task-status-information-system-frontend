@@ -18,6 +18,7 @@ export default function LegendPickerDialog({
   selectedColor = null,
 }) {
   // Empty state
+ // console.log("legends___", legends);
   if (legends.length === 0) {
     return (
       <Dialog
@@ -173,6 +174,7 @@ export default function LegendPickerDialog({
           ].map((legend) => {
             //console.log("legend___", legend);
             const { color_row: code, task_code: task_id, task_type } = legend;
+            //console.log("selectedColor___", legend, selectedColor);
             const isSelected = selectedColor === code;
 
             return (

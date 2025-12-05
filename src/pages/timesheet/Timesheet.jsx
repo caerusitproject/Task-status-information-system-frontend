@@ -228,7 +228,7 @@ export default function Timesheet() {
         } catch (err) {
           console.error("Save failed:", err);
         }
-      }, 600);
+      }, 1500);
     },
     [weekData]
   );
@@ -421,7 +421,7 @@ const transform = (data) => {
 
     const taskType = legend.task_type?.toLowerCase();
     const now = new Date().toISOString();
-
+    //console.log("legends used to create task:", legend);
     const baseTask = {
       taskId: legend.task_code,
       ticketId: legend.ticket_id,
@@ -619,8 +619,15 @@ const transform = (data) => {
 
   // Filter legends: exclude legends whose task_id is already used today
   const availableLegends = legends.filter(
-    (legend) => !usedTaskIdsToday.includes(legend.task_code)
-  );
+  (legend) => !usedTaskIdsToday.includes(legend.task_code)
+);
+
+// console.log("🟦 Available Legends:", {
+//   legends,
+//   usedTaskIdsToday,
+//   availableLegends
+// });
+
 
   return (
     <div>
