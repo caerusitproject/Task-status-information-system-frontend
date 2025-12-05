@@ -554,6 +554,7 @@ export default function Timesheet() {
         await TaskApi.create(taskType, payload);
       }
       await loadLegends();
+      await colorApi();
       setFormOpen(false);
       setTaskType(null);
       setFormData({
