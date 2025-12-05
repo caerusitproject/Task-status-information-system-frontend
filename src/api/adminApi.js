@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const LOCAL_API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
+const LOCAL_API = `${process.env.REACT_APP_API_URL || "http://localhost:3000"}/api`;
 
 export const ConfigApi = {
     async get(empCode, month, year) {

@@ -228,7 +228,7 @@ export default function Timesheet() {
         } catch (err) {
           console.error("Save failed:", err);
         }
-      }, 2000);
+      }, 1500);
     },
     [weekData]
   );
@@ -620,8 +620,15 @@ export default function Timesheet() {
 
   // Filter legends: exclude legends whose task_id is already used today
   const availableLegends = legends.filter(
-    (legend) => !usedTaskIdsToday.includes(legend.task_code)
-  );
+  (legend) => !usedTaskIdsToday.includes(legend.task_code)
+);
+
+// console.log("🟦 Available Legends:", {
+//   legends,
+//   usedTaskIdsToday,
+//   availableLegends
+// });
+
 
   return (
     <div>
